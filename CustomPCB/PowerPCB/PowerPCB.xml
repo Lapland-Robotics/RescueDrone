@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>D:\Nijssen_Cederic\OneDrive - PXL\EAI_3de_jaar\stage\RescueDrone\CustomPCB\PowerPCB\PowerPCB.kicad_sch</source>
+    <date>24/02/2022 11:45:24</date>
+    <tool>Eeschema (6.0.2)</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>PowerPCB.kicad_sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="C1">
+      <value>22uF</value>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>41d8e1e5-c70d-40f4-99a7-220fc1183187</tstamps>
+    </comp>
+    <comp ref="C2">
+      <value>10uF</value>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>3ed80a9b-b613-4878-afce-e244385fa149</tstamps>
+    </comp>
+    <comp ref="C3">
+      <value>10uF</value>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>59939527-0a5a-4897-b7ac-eb01fe94b877</tstamps>
+    </comp>
+    <comp ref="C4">
+      <value>10uF</value>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>72f41ef1-4222-4d47-9898-21f8bf7cc84d</tstamps>
+    </comp>
+    <comp ref="C5">
+      <value>10uF</value>
+      <libsource lib="Device" part="C_Polarized" description="Polarized capacitor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>f35b8787-9c11-4864-9756-1faf0b322cda</tstamps>
+    </comp>
+    <comp ref="D1">
+      <value>1N4007</value>
+      <footprint>Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal</footprint>
+      <datasheet>http://www.vishay.com/docs/88503/1n4001.pdf</datasheet>
+      <libsource lib="Diode" part="1N4007" description="1000V 1A General Purpose Rectifier Diode, DO-41"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>0cda7878-bd36-4597-b29c-d2231c7f56cc</tstamps>
+    </comp>
+    <comp ref="J1">
+      <value>XT30</value>
+      <libsource lib="Connector" part="Conn_01x02_Male" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2979e3a0-3605-49e3-aa66-4b2a3861df27</tstamps>
+    </comp>
+    <comp ref="J2">
+      <value>XT60</value>
+      <libsource lib="Connector" part="Conn_01x02_Male" description="Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>aa167df6-3ffb-416e-b713-7c3406b256af</tstamps>
+    </comp>
+    <comp ref="J3">
+      <value>Barrel_Jack_15V</value>
+      <footprint>Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal</footprint>
+      <libsource lib="Connector" part="Barrel_Jack_MountingPin" description="DC Barrel Jack with a mounting pin"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>5e32da30-1a3e-4135-adaf-bbf389b0c3fc</tstamps>
+    </comp>
+    <comp ref="J4">
+      <value>Barrel_Jack_5V</value>
+      <footprint>Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal</footprint>
+      <libsource lib="Connector" part="Barrel_Jack_MountingPin" description="DC Barrel Jack with a mounting pin"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>a1230e51-a25e-405f-a529-6d77ce24c790</tstamps>
+    </comp>
+    <comp ref="R1">
+      <value>150Ω</value>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>6b7ed168-4871-4946-bdda-64b58286ec65</tstamps>
+    </comp>
+    <comp ref="R2">
+      <value>1,65kΩ</value>
+      <libsource lib="Device" part="R" description="Resistor"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>db1bcc42-87df-448e-a5e9-22802202d13c</tstamps>
+    </comp>
+    <comp ref="S1">
+      <value>Power_input_Jumer</value>
+      <libsource lib="Connector" part="Conn_01x03_Male" description="Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7df640e9-ee81-46f1-8e5f-1577ad90532d</tstamps>
+    </comp>
+    <comp ref="S2">
+      <value>Power_output_Jumer</value>
+      <libsource lib="Connector" part="Conn_01x03_Male" description="Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>2adf658b-552f-4b22-a8ec-e2a99545b800</tstamps>
+    </comp>
+    <comp ref="U1">
+      <value>LM1084-ADJ</value>
+      <footprint>Package_TO_SOT_SMD:TO-263-3_TabPin2</footprint>
+      <datasheet>http://www.ti.com/lit/ds/symlink/lm1084.pdf</datasheet>
+      <libsource lib="Regulator_Linear" part="LM1084-ADJ" description="5A 29V Adjustable Linear Regulator, TO-220 / TO-263 (D2-PAK)"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>143dd9f9-62fc-434d-8f1c-9119a2979368</tstamps>
+    </comp>
+    <comp ref="U2">
+      <value>LM1084-5.0</value>
+      <footprint>Package_TO_SOT_SMD:TO-263-3_TabPin2</footprint>
+      <datasheet>http://www.ti.com/lit/ds/symlink/lm1084.pdf</datasheet>
+      <libsource lib="Regulator_Linear" part="LM1084-5.0" description="5A 27V Linear Regulator, Fixed Output 5.0V, TO-220/TO-263"/>
+      <property name="Sheetname" value=""/>
+      <property name="Sheetfile" value="PowerPCB.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>7da487ee-9574-4f3b-9fcd-d162c1294f54</tstamps>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Connector" part="Barrel_Jack_MountingPin">
+      <description>DC Barrel Jack with a mounting pin</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>BarrelJack*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Barrel_Jack_MountingPin</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+        <pin num="MP" name="MountPin" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="Conn_01x02_Male">
+      <description>Generic connector, single row, 01x02, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x02_Male</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Connector" part="Conn_01x03_Male">
+      <description>Generic connector, single row, 01x03, script generated (kicad-library-utils/schlib/autogen/connector/)</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>Connector*:*_1x??_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Conn_01x03_Male</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="Pin_1" type="passive"/>
+        <pin num="2" name="Pin_2" type="passive"/>
+        <pin num="3" name="Pin_3" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="C_Polarized">
+      <description>Polarized capacitor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>CP_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">C</field>
+        <field name="Value">C_Polarized</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Device" part="R">
+      <description>Resistor</description>
+      <docs>~</docs>
+      <footprints>
+        <fp>R_*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">R</field>
+        <field name="Value">R</field>
+        <field name="Datasheet">~</field>
+      </fields>
+      <pins>
+        <pin num="1" name="" type="passive"/>
+        <pin num="2" name="" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Diode" part="1N4007">
+      <description>1000V 1A General Purpose Rectifier Diode, DO-41</description>
+      <docs>http://www.vishay.com/docs/88503/1n4001.pdf</docs>
+      <footprints>
+        <fp>D*DO?41*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">D</field>
+        <field name="Value">1N4007</field>
+        <field name="Footprint">Diode_THT:D_DO-41_SOD81_P10.16mm_Horizontal</field>
+        <field name="Datasheet">http://www.vishay.com/docs/88503/1n4001.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="K" type="passive"/>
+        <pin num="2" name="A" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Regulator_Linear" part="LM1084-5.0">
+      <description>5A 27V Linear Regulator, Fixed Output 5.0V, TO-220/TO-263</description>
+      <docs>http://www.ti.com/lit/ds/symlink/lm1084.pdf</docs>
+      <footprints>
+        <fp>TO?220*</fp>
+        <fp>TO?263*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LM1084-5.0</field>
+        <field name="Datasheet">http://www.ti.com/lit/ds/symlink/lm1084.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="GND" type="power_in"/>
+        <pin num="2" name="VO" type="power_out"/>
+        <pin num="3" name="VI" type="power_in"/>
+      </pins>
+    </libpart>
+    <libpart lib="Regulator_Linear" part="LM1084-ADJ">
+      <description>5A 29V Adjustable Linear Regulator, TO-220 / TO-263 (D2-PAK)</description>
+      <docs>http://www.ti.com/lit/ds/symlink/lm1084.pdf</docs>
+      <footprints>
+        <fp>TO?220*</fp>
+        <fp>TO?263*</fp>
+      </footprints>
+      <fields>
+        <field name="Reference">U</field>
+        <field name="Value">LM1084-ADJ</field>
+        <field name="Datasheet">http://www.ti.com/lit/ds/symlink/lm1084.pdf</field>
+      </fields>
+      <pins>
+        <pin num="1" name="ADJ" type="input"/>
+        <pin num="2" name="VO" type="power_out"/>
+        <pin num="3" name="VI" type="power_in"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Connector">
+      <uri>D:\Programmas\KiCad\6.0\share\kicad\symbols\/Connector.kicad_sym</uri>
+    </library>
+    <library logical="Device">
+      <uri>D:\Programmas\KiCad\6.0\share\kicad\symbols\/Device.kicad_sym</uri>
+    </library>
+    <library logical="Diode">
+      <uri>D:\Programmas\KiCad\6.0\share\kicad\symbols\/Diode.kicad_sym</uri>
+    </library>
+    <library logical="Regulator_Linear">
+      <uri>D:\Programmas\KiCad\6.0\share\kicad\symbols\/Regulator_Linear.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="GND">
+      <node ref="C1" pin="2" pintype="passive"/>
+      <node ref="C2" pin="2" pintype="passive"/>
+      <node ref="C3" pin="2" pintype="passive"/>
+      <node ref="C4" pin="2" pintype="passive"/>
+      <node ref="C5" pin="2" pintype="passive"/>
+      <node ref="J1" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="J3" pin="2" pintype="passive"/>
+      <node ref="J3" pin="MP" pinfunction="MountPin" pintype="passive"/>
+      <node ref="J4" pin="2" pintype="passive"/>
+      <node ref="J4" pin="MP" pinfunction="MountPin" pintype="passive"/>
+      <node ref="R2" pin="2" pintype="passive"/>
+      <node ref="U2" pin="1" pinfunction="GND" pintype="power_in"/>
+    </net>
+    <net code="2" name="Net-(C2-Pad1)">
+      <node ref="C2" pin="1" pintype="passive"/>
+      <node ref="R1" pin="2" pintype="passive"/>
+      <node ref="R2" pin="1" pintype="passive"/>
+      <node ref="U1" pin="1" pinfunction="ADJ" pintype="input"/>
+    </net>
+    <net code="3" name="Net-(C3-Pad1)">
+      <node ref="C3" pin="1" pintype="passive"/>
+      <node ref="D1" pin="1" pinfunction="K" pintype="passive"/>
+      <node ref="S1" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U1" pin="3" pinfunction="VI" pintype="power_in"/>
+    </net>
+    <net code="4" name="Net-(J1-Pad1)">
+      <node ref="J1" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="S1" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="5" name="Net-(J2-Pad1)">
+      <node ref="J2" pin="1" pinfunction="Pin_1" pintype="passive"/>
+      <node ref="S1" pin="3" pinfunction="Pin_3" pintype="passive"/>
+    </net>
+    <net code="6" name="Net-(J3-Pad1)">
+      <node ref="J3" pin="1" pintype="passive"/>
+      <node ref="S2" pin="1" pinfunction="Pin_1" pintype="passive"/>
+    </net>
+    <net code="7" name="Net-(S2-Pad3)">
+      <node ref="C4" pin="1" pintype="passive"/>
+      <node ref="S2" pin="3" pinfunction="Pin_3" pintype="passive"/>
+      <node ref="U2" pin="3" pinfunction="VI" pintype="power_in"/>
+    </net>
+    <net code="8" name="Net-(U1-Pad2)">
+      <node ref="C1" pin="1" pintype="passive"/>
+      <node ref="D1" pin="2" pinfunction="A" pintype="passive"/>
+      <node ref="R1" pin="1" pintype="passive"/>
+      <node ref="S2" pin="2" pinfunction="Pin_2" pintype="passive"/>
+      <node ref="U1" pin="2" pinfunction="VO" pintype="power_out"/>
+    </net>
+    <net code="9" name="Net-(U2-Pad2)">
+      <node ref="C5" pin="1" pintype="passive"/>
+      <node ref="J4" pin="1" pintype="passive"/>
+      <node ref="U2" pin="2" pinfunction="VO" pintype="power_out"/>
+    </net>
+  </nets>
+</export>
