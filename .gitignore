@@ -235,3 +235,5 @@ qtcreator-*
 
 # Catkin custom files
 CATKIN_IGNORE
+
+jetson_backups/

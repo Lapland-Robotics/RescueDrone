@@ -360,24 +360,24 @@
       "version": 2
     },
     "net_colors": {
+      "Net-(C1-Pad1)": "rgb(252, 165, 255)",
       "Net-(C2-Pad1)": "rgb(255, 49, 64)",
       "Net-(C3-Pad1)": "rgb(24, 26, 255)",
+      "Net-(C4-Pad1)": "rgb(255, 148, 44)",
+      "Net-(C5-Pad1)": "rgb(190, 255, 37)",
       "Net-(J1-Pad2)": "rgb(71, 224, 255)",
       "Net-(J2-Pad2)": "rgb(87, 255, 131)",
-      "Net-(J3-Pad1)": "rgb(255, 244, 23)",
-      "Net-(S2-Pad3)": "rgb(255, 148, 44)",
-      "Net-(U1-Pad2)": "rgb(252, 165, 255)",
-      "Net-(U2-Pad2)": "rgb(190, 255, 37)"
+      "Net-(J3-Pad1)": "rgb(255, 244, 23)"
     }
   },
   "pcbnew": {
     "last_paths": {
-      "gencad": "",
+      "gencad": "PowerPCB.cad",
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
       "step": "PowerPCB.step",
-      "vrml": ""
+      "vrml": "PowerPCB.wrl"
     },
     "page_layout_descr_file": ""
   },
