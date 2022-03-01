@@ -40,6 +40,9 @@ rescue-backup/
 bom/
 
 # Gerber export output
-out/
+output/
+
+#backups
+PowerPCB-backups/
 
 # End of https://www.toptal.com/developers/gitignore/api/kicad
