@@ -1158,7 +1158,7 @@
     (uuid 5e32da30-1a3e-4135-adaf-bbf389b0c3fc)
     (property "Reference" "J3" (id 0) (at 105.41 50.8 0))
     (property "Value" "Barrel_Jack_15V" (id 1) (at 105.41 53.34 0))
-    (property "Footprint" "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal" (id 2) (at 106.68 60.706 0)
+    (property "Footprint" "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal_flat_pins" (id 2) (at 106.68 60.706 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 106.68 60.706 0)
@@ -1330,7 +1330,7 @@
     (property "Value" "Barrel_Jack_5V" (id 1) (at 182.88 81.28 0)
       (effects (font (size 1.27 1.27)) (justify right))
     )
-    (property "Footprint" "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal" (id 2) (at 175.26 79.756 0)
+    (property "Footprint" "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal_flat_pins" (id 2) (at 175.26 79.756 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 175.26 79.756 0)
@@ -1514,10 +1514,10 @@
       (reference "J2") (unit 1) (value "XT60") (footprint "Connector_AMASS:AMASS_XT60-M_1x02_P7.20mm_Vertical")
     )
     (path "/5e32da30-1a3e-4135-adaf-bbf389b0c3fc"
-      (reference "J3") (unit 1) (value "Barrel_Jack_15V") (footprint "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal")
+      (reference "J3") (unit 1) (value "Barrel_Jack_15V") (footprint "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal_flat_pins")
     )
     (path "/a1230e51-a25e-405f-a529-6d77ce24c790"
-      (reference "J4") (unit 1) (value "Barrel_Jack_5V") (footprint "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal")
+      (reference "J4") (unit 1) (value "Barrel_Jack_5V") (footprint "Connector_BarrelJack:BarrelJack_CUI_PJ-102AH_Horizontal_flat_pins")
     )
     (path "/6b7ed168-4871-4946-bdda-64b58286ec65"
       (reference "R1") (unit 1) (value "150Ω") (footprint "Resistor_THT:R_Axial_DIN0309_L9.0mm_D3.2mm_P12.70mm_Horizontal")

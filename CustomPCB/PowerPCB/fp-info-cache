@@ -1,4 +1,4 @@
-20112700833837619
+20115993029755772
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -7925,6 +7925,13 @@ barrel jack cui dc power
 3
 Connector_BarrelJack
 BarrelJack_CUI_PJ-102AH_Horizontal
+Thin-pin DC Barrel Jack, https://cdn-shop.adafruit.com/datasheets/21mmdcjackDatasheet.pdf
+Power Jack
+0
+3
+3
+Connector_BarrelJack
+BarrelJack_CUI_PJ-102AH_Horizontal_flat_pins
 Thin-pin DC Barrel Jack, https://cdn-shop.adafruit.com/datasheets/21mmdcjackDatasheet.pdf
 Power Jack
 0
@@ -57574,6 +57581,13 @@ Yellow 5381 Series LED
 0
 2
 2
+LM2677T-ADJ
+TO127P457X1016X2052-7P
+
+
+0
+7
+7
 Module
 A20_OLINUXINO_LIME2
 A20 Olinuxino LIME2, 1.2GHz, 512-1024MB RAM, Micro-SD, NAND or eMMC, 1000Mbit Ethernet
