@@ -1,3 +1,35 @@
 <resources>
-    <string name="app_name">ImportSDKDemo</string>
+    <string name="app_name">SaR Drone Home Base</string>
+    <string name="application_activation_demo">Application Activation Demo</string>
+
+    <!-- Text Titles -->
+    <string name="Title">SaR Drone Home Base</string>
+    <string name="app_activation_state">App Activation State:</string>
+    <string name="Connect_state">Connection Status:</string>
+    <string name="productInfo">Product information:</string>
+    <string name="DroneBatteryInfo">Drone Battery Info:</string>
+    <string name="ControllerBatteryInfo">Controller Battery Info:</string>
+    <string name="esp_beep">ESP Beep: </string>
+    <string name="GPS_Information">GPS Coordinates: </string>
+    <string name="ControllerInfo">Controller Info:</string>
+    <!-- <string name="title_activity_connection">ConnectionActivity</string> -->
+    <!-- <string name="action_settings">Settings</string> -->
+
+    <!-- button names-->
+    <string name="button_open">Open</string>
+    <string name="button_back">Go back</string>
+    <string name="button_map">GPS Map</string>
+
+    <!-- Activity Strings -->
+    <string name="sdk_version">DJI SDK Version: %1$s</string>
+    <string name="connection_drone_loose">Status: No Product Connected</string>
+    <string name="connection_controller_loose">Status: No controller Connected</string>
+    <string name="gps_disables">GPS is disabled</string>
+    <string name="gps_enabled">GPS Enabled waiting on GPS data</string>
+
+    <!-- placeholders -->
+    <string name="unknown">Unknown</string>
+
+    <!-- <string name="disconnected">Disconnected</string> -->
+
 </resources>

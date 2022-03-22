@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp"
+        android:text="@string/Title"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/product_information"
+        android:layout_width="160dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/textView"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="15dp"
+        android:gravity="center_horizontal|bottom"
+        android:text="@string/productInfo"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_product_information"
+        android:layout_width="220dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/product_information"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="0dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/drone_battery_information"
+        android:layout_width="160dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/textView"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="120dp"
+        android:gravity="center_horizontal|bottom"
+        android:text="@string/DroneBatteryInfo"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_drone_battery_information"
+        android:layout_width="340dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/drone_battery_information"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="30dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/controller_battery_information"
+        android:layout_width="180dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/tv_drone_battery_information"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="110dp"
+        android:gravity="center_horizontal|bottom"
+        android:text="@string/ControllerBatteryInfo"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_controller_battery_information"
+        android:layout_width="340dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/controller_battery_information"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="30dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/gps_information"
+        android:layout_width="180dp"
+        android:layout_height="30dp"
+        android:layout_below="@+id/tv_controller_battery_information"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="110dp"
+        android:gravity="center_horizontal|bottom"
+        android:text="@string/GPS_Information"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_gps_information"
+        android:layout_width="340dp"
+        android:layout_height="60dp"
+        android:layout_below="@+id/gps_information"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="0dp"
+        android:layout_marginEnd="30dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+
+    <Button
+        android:id="@+id/btn_back"
+        style="@style/common_button"
+        android:layout_below="@+id/tv_drone_battery_information"
+        android:layout_marginTop="25dp"
+        android:layout_marginStart="30dp"
+        android:text="@string/button_back" />
+
+    <Button
+        android:id="@+id/btn_map"
+        style="@style/common_button"
+        android:layout_below="@+id/tv_drone_battery_information"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="25dp"
+        android:layout_toEndOf="@+id/btn_back"
+        android:text="@string/button_map" />
+
+    <TextView
+        android:id="@+id/ESP_Beep"
+        android:layout_width="100dp"
+        android:layout_height="20dp"
+        android:layout_below="@+id/btn_back"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="37.5dp"
+        android:gravity="center_horizontal|bottom"
+        android:text="@string/esp_beep"
+        android:textColor="@color/black"
+        android:textSize="17sp"
+        android:textStyle="bold" />
+
+    <Button
+        android:id="@+id/btn_ESCBeep"
+        style="@style/common_button"
+        android:layout_below="@+id/btn_back"
+        android:layout_marginStart="25dp"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="30dp"
+        android:layout_toEndOf="@+id/ESP_Beep"
+        android:text="@string/unknown" />
+</RelativeLayout>
