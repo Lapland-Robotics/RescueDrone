@@ -1,0 +1,123 @@
+import time,board,busio
+import numpy as np
+import adafruit_mlx90640
+import datetime as dt
+import cv2
+import jetson.inference
+import jetson.utils
+
+i2c = busio.I2C(board.SCL, board.SDA, frequency=400000) # setup I2C
+mlx = adafruit_mlx90640.MLX90640(i2c) # begin MLX90640 with I2C comm
+#mlx.refresh_rate = adafruit_mlx90640.RefreshRate.REFRESH_2HZ # 16Hz is noisy
+
+#loading the detection model with a default treshold of 50 percent 
+#Decreasing the treshold will result in detecting more objects
+#Increasing the treshold will result in detecting less objects
+#Use SSD-MobileNet-V2 for object detection, this module has 91 different objects
+net = jetson.inference.detectNet("pednet", threshold=0.5)
+
+mlx_shape = (24,32)
+tframe = np.zeros((24*32,)) # setup array for storing all 768 temperatures
+
+def td_to_img(f,tmax,tmin):
+    norm = np.uint8((f - tmin)*255/(tmax-tmin))
+    return norm
+
+time.sleep(2)
+t0 = time.time()
+counter = 0
+detects = 0
+reset = False
+
+while counter < 15:
+	# waiting for data frame
+	mlx.getFrame(tframe) # read MLX temperatures into frame var
+	t_img = (np.reshape(tframe,mlx_shape)) # reshape to 24x32
+	tmax = tframe.max()
+	tmin = tframe.min()
+	ta_img = td_to_img(t_img, tmax, tmin)
+	# np.fliplr(ta_img)
+
+	# Image processing
+	img = cv2.applyColorMap(ta_img, cv2.COLORMAP_JET)
+	img = cv2.resize(img, (640,480), interpolation = cv2.INTER_CUBIC)
+	# img = cv2.flip(img, 1)
+
+	text = 'Tmin = {:+.1f} Tmax = {:+.1f} FPS = {:.2f}'.format(tmin, tmax, 1/(time.time() - t0))
+	cv2.putText(img, text, (5, 15), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 0), 1)
+	cv2.imshow('Human detection using heat camera', img)
+
+	if tmax > 30:
+		counter = counter + 1
+		reset = False
+		print("Body temperature detected")
+	else:
+		reset = True
+
+	if reset == True:
+		counter = 0
+
+	if cv2.waitKey(1) == ord("q"):
+		break
+cv2.destroyAllWindows()
+
+
+#Importing the camera stream
+#camera = jetson.utils.gstCamera(2560, 720, "/dev/video0") #ZED camera
+camera = jetson.utils.gstCamera(1920, 1080, "0") #RPI Cam
+display = jetson.utils.glDisplay()
+
+#using a while function to run the program while the display is open
+while detects < 140:
+	img, width, height = camera.CaptureRGBA()
+	detections = net.Detect(img, width, height)
+	display.RenderOnce(img, width, height)
+	display.SetTitle("Search and Rescue Drone Advanced Detection System | Framerate {:.0f} FPS".format(net.GetNetworkFPS()))
+	for detect in detections:
+		#time.sleep(1)
+		#print(detect)
+		ID = detect.ClassID
+		item = net.GetClassDesc(ID)
+		center = detect.Center
+		if (0 < center[0] < 640) and (719 < center[1] < 1081):
+			print("1") #bottom left
+			detects = detects + 1
+			print(detects)
+		elif (639 < center[0] < 1280) and (719 < center[1] < 1081):
+			print("2") #bottom mid
+			detects = detects + 1
+			print(detects)
+		elif (1279 < center[0] < 1921) and (719 < center[1] < 1081):
+			print("3") #bottom right
+			detects = detects + 1
+			print(detects)
+		elif (0 < center[0] < 640) and (359 < center[1] < 720):
+			print("4") #mid left
+			detects = detects + 1
+			print(detects)
+		elif (639 < center[0] < 1280) and (359 < center[1] < 720):
+			print("5") #mid
+			detects = detects + 1
+			print(detects)
+		elif (1279 < center[0] < 1921) and (359 < center[1] < 720):
+			print("6") #mid right
+			detects = detects + 1
+			print(detects)
+		elif (0 < center[0] < 640) and (0 < center[1] < 360):
+			print("7") #top left
+			detects = detects + 1
+			print(detects)
+		elif (639 < center[0] < 1280) and (0 < center[1] < 360):
+			print("8") #top mid
+			detects = detects + 1
+			print(detects)
+		elif (1279 < center[0] < 1921) and (0 < center[1] < 360):
+			print("9") #top right
+			detects = detects + 1
+			print(detects)
+
+	if not detect in detections:
+		detects = 0
+		#print(item, center)
+
+print("Human recognition succeeded, time for GPS location and care package drop")
