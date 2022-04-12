@@ -105,26 +105,23 @@ def main():
             break
           
           x = 0
+          y = 0
           counter = 0
           while x < 120:
-            y = 0
             while y < 160:
-              if data[x,y] > 28815:
-                counter = counter + 1
-                y = y + 1
+              if data[x,y] > 29315: #Pixel more than 20 degrees Celcius
+                if data[x,y] < 30815: #Pixel less than 35 degrees Celcius
+                  counter = counter + 1
+                  y = y + 1
             y = 0
-            #print("\n", data[x], "\n", x , "\n")
             x = x + 1
-          if counter > 200:
+          if counter > 200: #If there is more than 200 out of 19200)pixels that has a value between 20 and 35 degrees Celcius, print bodytemp
             print("bodytemp")
-          counter = 0
+          counter = 0 #Reset counter for next frame
           x = 0
           data = cv2.resize(data[:,:], (640, 480))
-          #minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(data)
           img = raw_to_8bit(data)
-          #display_temperature(img, minVal, minLoc, (255, 0, 0))
-          #display_temperature(img, maxVal, maxLoc, (0, 0, 255))
-          cv2.imshow('Lepton Radiometry', img)
+          cv2.imshow('Body temperature detection', img)
           cv2.waitKey(1)
 
         cv2.destroyAllWindows()
