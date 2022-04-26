@@ -5,11 +5,18 @@
       <map>
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/ic_BaseApp_background.xml" value="0.211" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/ic_base_app_background.xml" value="0.1385" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/ic_drone_icon2.xml" value="0.162" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/round_btn.xml" value="0.1435" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/round_btn_disable.xml" value="0.1435" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/round_btn_pressed.xml" value="0.1" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/drawable/user_location_icon.xml" value="0.1435" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout-land/activity_main.xml" value="0.33" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout-land/app_activation.xml" value="0.25" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout-land/live_map_view.xml" value="0.2677083333333333" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout-land/main_activity.xml" value="0.22" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout/activity_main.xml" value="0.25" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout/app_activation.xml" value="0.25" />
+        <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout/live_map_view.xml" value="0.26570415400202635" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout/main_activity.xml" value="0.33" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/layout/round_btn.xml" value="0.25" />
         <entry key="..\:/PXL/EAI_3de_jaar/stage/RescueDrone/HomeBase/app/src/main/res/mipmap-anydpi-v26/ic_base_app.xml" value="0.1385" />

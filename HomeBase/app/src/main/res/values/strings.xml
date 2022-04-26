@@ -12,6 +12,7 @@
     <string name="esp_beep">ESP Beep: </string>
     <string name="GPS_Information">GPS Coordinates: </string>
     <string name="ControllerInfo">Controller Info:</string>
+    <string name="ERROR_ORIENTATION">What did you do?</string>
     <!-- <string name="title_activity_connection">ConnectionActivity</string> -->
     <!-- <string name="action_settings">Settings</string> -->
 
@@ -19,6 +20,10 @@
     <string name="button_open">Open</string>
     <string name="button_back">Go back</string>
     <string name="button_map">GPS Map</string>
+    <string name="button_position_tracking">Track position: </string>
+    <string name="button_start_search">Start Searching</string>
+    <string name="button_force_stop">Stop Searching</string>
+    <string name="button_start_coordinates">Start Coordinates</string>
 
     <!-- Activity Strings -->
     <string name="sdk_version">DJI SDK Version: %1$s</string>

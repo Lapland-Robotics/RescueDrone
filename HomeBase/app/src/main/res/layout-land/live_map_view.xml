@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.mapbox.maps.MapView
+        android:id="@+id/map_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/btn_back"
+        android:layout_marginTop="5dp"
+        mapbox:mapbox_locationComponentEnabled="true" />
+
+    <Button
+        android:id="@+id/btn_back"
+        style="@style/common_button"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:text="@string/button_back" />
+
+    <Button
+        android:id="@+id/btn_position_tracking"
+        style="@style/common_button"
+        android:layout_width="100dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/btn_back"
+        android:text="@string/button_position_tracking" />
+
+    <Button
+        android:id="@+id/btn_start_search"
+        style="@style/common_button"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/btn_position_tracking"
+        android:text="@string/button_start_search" />
+
+    <Button
+        android:id="@+id/btn_force_Stop"
+        style="@style/common_button"
+        android:layout_width="100dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/btn_start_search"
+        android:text="@string/button_force_stop" />
+
+    <Button
+        android:id="@+id/btn_start_coordinates"
+        style="@style/common_button"
+        android:layout_width="100dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/btn_force_Stop"
+        android:text="@string/button_start_coordinates" />
+
+    <TextView
+        android:id="@+id/tv_drone_battery_information"
+        android:layout_width="100dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@+id/btn_start_coordinates"
+        android:layout_marginTop="5dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+
+    <TextView
+        android:id="@+id/tv_controller_battery_information"
+        android:layout_width="125dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="5dp"
+        android:layout_toEndOf="@+id/tv_drone_battery_information"
+        android:layout_marginTop="5dp"
+        android:text="@string/unknown"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="17sp" />
+</RelativeLayout>
