@@ -1,4 +1,4 @@
-package com.SARLUAP.BaseStation;
+package com.sarLuap.baseStation;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -20,11 +20,8 @@ import androidx.annotation.NonNull;
 import java.util.List;
 import java.util.Objects;
 
-import dji.common.error.DJIError;
-import dji.common.flightcontroller.FlightControllerState;
-import dji.common.flightcontroller.LEDsSettings;
 import dji.common.flightcontroller.LocationCoordinate3D;
-import dji.common.util.CommonCallbacks;
+import dji.common.remotecontroller.HardwareState;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.battery.Battery;
 import dji.sdk.flightcontroller.FlightController;
@@ -34,6 +31,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getName();
 
     private boolean gps;
+    public static boolean inSearch;
 
     private Handler handler;
 
@@ -41,21 +39,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private RemoteController mRemoteCon;
     private FlightController mFlightCon;
 
-    protected TextView ProductTV;
-    protected TextView DroneBatteryTV;
-    protected TextView ConBatteryTV;
-    protected TextView GPSTV;
+    protected TextView productTV;
+    protected TextView droneBatteryTV;
+    protected TextView conBatteryTV;
+    protected TextView gpsTV;
 
-    protected Button btn_back;
-    protected Button btn_esc_beep;
-    protected Button btn_map;
+    protected Button btnBack;
+    protected Button btnEscBeep;
+    protected Button btnMap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main_activity);
-
+        inSearch = true;
         handler = new Handler();
 
         initValues();
@@ -65,7 +63,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         filter.addAction(DroneConnection.FLAG_CONNECTION_CHANGE);
         registerReceiver(mReceiver, filter);
 
-        custom_fun.HideNavBar(this);
+        CustomFun.HideNavBar(this);
     }
 
     @Override
@@ -81,7 +79,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
 */
     @Override
     public void onResume() {
-        custom_fun.HideNavBar(this);
+        CustomFun.HideNavBar(this);
+        refreshSDKRelativeUI();
         super.onResume();
     }
     private void initValues(){
@@ -91,18 +90,18 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     private void initUi(){
-        ProductTV = (TextView) findViewById(R.id.tv_product_information);
-        DroneBatteryTV = (TextView) findViewById(R.id.tv_drone_battery_information);
-        ConBatteryTV = (TextView) findViewById(R.id.tv_controller_battery_information);
-        GPSTV = (TextView) findViewById(R.id.tv_gps_information);
+        productTV = (TextView) findViewById(R.id.tv_product_information);
+        droneBatteryTV = (TextView) findViewById(R.id.tv_drone_battery_information);
+        conBatteryTV = (TextView) findViewById(R.id.tv_controller_battery_information);
+        gpsTV = (TextView) findViewById(R.id.tv_gps_information);
 
-        btn_esc_beep = (Button) findViewById(R.id.btn_ESCBeep);
-        btn_back = (Button) findViewById(R.id.btn_back);
-        btn_map = (Button) findViewById(R.id.btn_map);
+        btnEscBeep = (Button) findViewById(R.id.btn_ESCBeep);
+        btnBack = (Button) findViewById(R.id.btn_back);
+        btnMap = (Button) findViewById(R.id.btn_map);
 
-        btn_esc_beep.setOnClickListener(this);
-        btn_back.setOnClickListener(this);
-        btn_map.setOnClickListener(this);
+        btnEscBeep.setOnClickListener(this);
+        btnBack.setOnClickListener(this);
+        btnMap.setOnClickListener(this);
 
         gps = false;
 
@@ -123,9 +122,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
             Log.v(TAG, "refreshSDK: True");
 
             if (null != mProduct.getModel()) {
-                ProductTV.setText("" + mProduct.getModel().getDisplayName());
+                productTV.setText("" + mProduct.getModel().getDisplayName());
             } else {
-                ProductTV.setText(R.string.connection_drone_loose);
+                productTV.setText(R.string.connection_drone_loose);
             }
 
             if (null != mProduct.getBatteries()){
@@ -133,13 +132,13 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 if(batteries.size() == 1){
                     Battery battery = batteries.get(0);
                     battery.setStateCallback(batteryState ->
-                            DroneBatteryTV.setText("Remaining charge: " + batteryState.getChargeRemaining() +
+                            droneBatteryTV.setText("Remaining charge: " + batteryState.getChargeRemaining() +
                                           "mAh (" + batteryState.getChargeRemainingInPercent() + "%)\n" +
                                           "Current draw: " + batteryState.getCurrent() * - 1 + "mA\n" +
                                           "Temperature: " + batteryState.getTemperature() + "°C"));
                 }
                 else{
-                    DroneBatteryTV.setText("Multiple batteries detected");
+                    droneBatteryTV.setText("Multiple batteries detected");
                 }
             }
 
@@ -150,15 +149,24 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         if (null != mRemoteCon && mRemoteCon.isConnected()){
             mRemoteCon.setChargeRemainingCallback(batteryState ->
-                    ConBatteryTV.setText("remaining charge: " + batteryState.getRemainingChargeInmAh() +
+                    conBatteryTV.setText("remaining charge: " + batteryState.getRemainingChargeInmAh() +
                                          "mAh (" + batteryState.getRemainingChargeInPercent() + "%)"));
+            mRemoteCon.setHardwareStateCallback(new HardwareState.HardwareStateCallback() {
+                @Override
+                public void onUpdate(@NonNull HardwareState hardwareState) {
+                    if(inSearch && (Objects.requireNonNull(hardwareState.getLeftStick()).getVerticalPosition() != 0 || hardwareState.getLeftStick().getHorizontalPosition() != 0 || Objects.requireNonNull(hardwareState.getRightStick()).getHorizontalPosition() != 0 || hardwareState.getRightStick().getVerticalPosition() != 0)){
+                        showToast("manual override");
+                        inSearch = false;
+                    }
+                }
+            });
         }
         else {
-            ConBatteryTV.setText(R.string.connection_controller_loose);
+            conBatteryTV.setText(R.string.connection_controller_loose);
         }
 
         if(!gps){
-            GPSTV.setText(R.string.gps_disables);
+            gpsTV.setText(R.string.gps_disables);
         }
     }
 
@@ -177,13 +185,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
 
             case R.id.btn_map: {
+                Intent intent = new Intent(this, LiveMapActivity.class);
+                startActivity(intent);
+                refreshSDKRelativeUI();
+                /*
                 gps = true;
-                GPSTV.setText(R.string.gps_enabled);
                 mFlightCon.setStateCallback(flightControllerState -> {
                     LocationCoordinate3D location = flightControllerState.getAircraftLocation();
-                    GPSTV.setText("lat: " + location.getLatitude() + " long: " + location.getLongitude() + " alt: " + location.getAltitude() +
-                                  "\nSatCount: " + flightControllerState.getSatelliteCount() + " SignalLevel: " + flightControllerState.getGPSSignalLevel());
+                    if(Double.isNaN(location.getLatitude())){gpsTV.setText("got NaN");}
+                    else {
+                        gpsTV.setText("lat: " + location.getLatitude() + " long: " + location.getLongitude() + " alt: " + location.getAltitude() +
+                                "\nSatCount: " + flightControllerState.getSatelliteCount() + " SignalLevel: " + flightControllerState.getGPSSignalLevel());
+                    }
                 });
+                // */
+
                 break;
             }
 
