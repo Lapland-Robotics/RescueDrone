@@ -1,4 +1,4 @@
-package com.SARLUAP.BaseStation;
+package com.sarLuap.baseStation;
 
 import android.app.Application;
 import android.content.Context;
