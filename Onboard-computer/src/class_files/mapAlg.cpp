@@ -28,144 +28,159 @@ mapAlg::~mapAlg()
 
 void mapAlg::step(double sleepTime){
     ros::spinOnce();
-    switch (local_status){
-        case OFF:{
-            break;
-        }
-
-        case IDLE:{
-            //waiting for start coordinates
-            break;
-        }
-
-        case CREATE_ROUTE:{
-            ROS_INFO_STREAM("Create route");
-            route.clear();
-            route_index = 0;
-            if(demo){
-                route.emplace_back(0,0);
-                route.emplace_back(10,10);
-                route.emplace_back(-10,10);
-                route.emplace_back(10,-10);
-                route.emplace_back(-10,-10);
-            }
-            else{
-                //create optimal route algoritm
+    if (status_drone != MANUAL_CONTROLL && status_drone != ERROR){
+        switch (local_status){
+            case OFF:{
+                break;
             }
 
-            
-            ROS_INFO_STREAM("route created");
-            local_status = IDLE;
-            got_route = true;
-            break;
-        }
-
-        case GOING_TO_START:{
-            ROS_INFO_STREAM("Go to start");
-            
-            sar_drone::directions return_msg;
-            return_msg.ID = msg_ID;
-            return_msg.Command = MA_MOVE_COORDINATES;
-            return_msg.Latitude = start_location.first;
-            return_msg.Longitude = start_location.second;
-            return_msg.z = 3;
-            drone_commands_pub.publish(return_msg);
-            local_status = WAIT_MOVING;
-            break;
-        }
-
-        case NEXT_MOVE:{
-            // ROS_INFO_STREAM("Next Move");
-
-            sar_drone::directions return_msg;
-            return_msg.ID = msg_ID;
-            return_msg.Command = MA_MOVE_RELATIVE_GROUND;
-
-            return_msg.x = route.at(route_index).first;
-            return_msg.y = route.at(route_index).second;
-            return_msg.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 3 : 0;
-            return_msg.r = 0;
-
-            drone_commands_pub.publish(return_msg);
-
-            route_index ++;
-
-            //ROS_INFO_STREAM("route index: " <<(int) route_index << "\troute size: " <<(int) route.size());
-
-            next_local_status = route_index == route.size() ? STOPPING : WAIT_MOVING;
-            local_status = MOVE_COMMAND_SEND;
-            
-            break;
-
-        }
-        
-        case MOVE_COMMAND_SEND:{
-            if(status_drone != MAPPING_ALGORITM_NEXT_STEP){
-                local_status = next_local_status;
-                start_time = ros::Time::now();
+            case IDLE:{
+                //waiting for start coordinates
+                break;
             }
-            break;
-        }
 
-        case WAIT_MOVING:{
-            //waiting for drone stoped moving
-            switch(status_drone){
-                case MAPPING_ALGORITM_NEXT_STEP:
-                    ROS_INFO_STREAM("next move");
-                    local_status = NEXT_MOVE;
-                    break;
+            case CREATE_ROUTE:{
+                ROS_INFO_STREAM("Create route");
+                route.clear();
+                route_index = 0;
+                if(demo){
+                    route.emplace_back(0,0);
+                    route.emplace_back(10,10);
+                    route.emplace_back(-10,10);
+                    route.emplace_back(10,-10);
+                    route.emplace_back(-10,-10);
+                }
+                else{
+                    //create optimal route algoritm
+                }
+
                 
-                case TAKING_OFF:
-                case LANDING:
-                case MAPPING_ALGORITM_MOVING:
-                    break;
+                ROS_INFO_STREAM("route created");
+                local_status = IDLE;
+                got_route = true;
+                break;
+            }
 
-                case ON_GROUND:
-                    local_status = OFF;
-                    break;
+            case GOING_TO_START:{
+                ROS_INFO_STREAM("Go to start");
                 
-                case MAPPING_ALGORITM_DIDNT_FINISH_MOVE:
-                    local_status = STOPPING;
-                    break;
+                sar_drone::directions return_msg;
+                return_msg.ID = msg_ID;
+                return_msg.Command = MA_MOVE_COORDINATES;
+                return_msg.Latitude = start_location.first;
+                return_msg.Longitude = start_location.second;
+                return_msg.z = 3;
+                drone_commands_pub.publish(return_msg);
+                local_status = WAIT_MOVING;
+                break;
+            }
 
-                default:
-                    ROS_ERROR_STREAM("serious what are you doing? I don't now this command (" << (int) status_drone << ")");
-                    break;
+            case NEXT_MOVE:{
+                // ROS_INFO_STREAM("Next Move");
+
+                sar_drone::directions return_msg;
+                return_msg.ID = msg_ID;
+                return_msg.Command = MA_MOVE_RELATIVE_GROUND;
+
+                return_msg.x = route.at(route_index).first;
+                return_msg.y = route.at(route_index).second;
+                return_msg.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 3 : 0;
+                return_msg.r = 0;
+
+                drone_commands_pub.publish(return_msg);
+
+                route_index ++;
+
+                //ROS_INFO_STREAM("route index: " <<(int) route_index << "\troute size: " <<(int) route.size());
+
+                next_local_status = route_index == route.size() ? STOPPING : WAIT_MOVING;
+                local_status = MOVE_COMMAND_SEND;
+                
+                break;
+
             }
             
-            break;
-        }
-
-        case WAIT_STARTING:{
-            //waiting for drone stoped moving
-            switch(status_drone){
-                case MAPPING_ALGORITM_NEXT_STEP:
-                    ROS_INFO_STREAM("first move");
-                    local_status = NEXT_MOVE;
-                    break;
-                
-                case TAKING_OFF:
-                case ON_GROUND:
-                case MAPPING_ALGORITM_MOVING:
-                    break;
-
-                default:
-                    ROS_ERROR_STREAM("serious what are you doing? I don't now this command (" << (int) status_drone << ")");
-                    break;
+            case MOVE_COMMAND_SEND:{
+                if(status_drone != MAPPING_ALGORITM_NEXT_STEP){
+                    local_status = next_local_status;
+                    start_time = ros::Time::now();
+                }
+                break;
             }
-            
-            break;
-        }
 
+            case WAIT_MOVING:{
+                //waiting for drone stoped moving
+                switch(status_drone){
+                    case MAPPING_ALGORITM_NEXT_STEP:
+                        ROS_INFO_STREAM("next move");
+                        local_status = NEXT_MOVE;
+                        break;
+                    
+                    case TAKING_OFF:
+                    case LANDING:
+                    case MAPPING_ALGORITM_MOVING:
+                        break;
 
-        case STOPPING:{
-            switch(status_drone){
-                case ON_GROUND:
-                case MAPPING_ALGORITM_NEXT_STEP:{
-                    elapsed_time = ros::Time::now() - start_time;
-                    if(elapsed_time > ros::Duration(15.0)){
-                        ROS_INFO_STREAM("stop searching");
+                    case ON_GROUND:
+                        local_status = OFF;
+                        break;
+                    
+                    case MAPPING_ALGORITM_DIDNT_FINISH_MOVE:
+                        local_status = STOPPING;
+                        break;
 
+                    default:
+                        ROS_ERROR_STREAM("serious what are you doing? I don't know this command (" << (int) status_drone << ")");
+                        break;
+                }
+                
+                break;
+            }
+
+            case WAIT_STARTING:{
+                //waiting for drone stoped moving
+                switch(status_drone){
+                    case MAPPING_ALGORITM_NEXT_STEP:
+                        ROS_INFO_STREAM("first move");
+                        local_status = NEXT_MOVE;
+                        break;
+                    
+                    case TAKING_OFF:
+                    case ON_GROUND:
+                    case MAPPING_ALGORITM_MOVING:
+                        break;
+
+                    default:
+                        ROS_ERROR_STREAM("serious what are you doing? I don't know this command (" << (int) status_drone << ")");
+                        break;
+                }
+                
+                break;
+            }
+
+            case STOPPING:{
+                switch(status_drone){
+                    case ON_GROUND:
+                    case MAPPING_ALGORITM_NEXT_STEP:{
+                        elapsed_time = ros::Time::now() - start_time;
+                        if(elapsed_time > ros::Duration(15.0)){
+                            ROS_INFO_STREAM("stop searching");
+
+                            route_index = 0;
+                            got_route = false;
+
+                            sar_drone::directions return_msg;
+                            return_msg.ID = msg_ID;
+                            return_msg.Command = LAND;
+                            drone_PRIO_commands_pub.publish(return_msg);
+                            
+                            local_status = MOVE_COMMAND_SEND;
+                            next_local_status = WAIT_MOVING;
+                        }
+                        break;
+                    }
+                    case MAPPING_ALGORITM_DIDNT_FINISH_MOVE:{
+                        ROS_INFO_STREAM("stop by error");
                         route_index = 0;
                         got_route = false;
 
@@ -176,30 +191,30 @@ void mapAlg::step(double sleepTime){
                         
                         local_status = MOVE_COMMAND_SEND;
                         next_local_status = WAIT_MOVING;
+                        break;
                     }
-                    break;
                 }
-                case MAPPING_ALGORITM_DIDNT_FINISH_MOVE:{
-                    ROS_INFO_STREAM("stop by error");
-                    route_index = 0;
-                    got_route = false;
-
-                    sar_drone::directions return_msg;
-                    return_msg.ID = msg_ID;
-                    return_msg.Command = LAND;
-                    drone_PRIO_commands_pub.publish(return_msg);
-                    
-                    local_status = MOVE_COMMAND_SEND;
-                    next_local_status = WAIT_MOVING;
-                    break;
-                }
+                break;
             }
-            break;
-            
-        }
 
-        default:{
-            ROS_ERROR_STREAM("WHAT THE HELLL DIT YOU JUST DO?");
+            case STOP_NOW:{
+                route_index = 0;
+                got_route = false;
+
+                sar_drone::directions return_msg;
+                return_msg.ID = msg_ID;
+                return_msg.Command = LAND;
+                drone_PRIO_commands_pub.publish(return_msg);
+                
+                local_status = MOVE_COMMAND_SEND;
+                next_local_status = WAIT_MOVING;
+                break;
+            }
+
+            default:{
+                ROS_ERROR_STREAM("WHAT THE HELLL DID YOU JUST DO?");
+                break;
+            }
         }
     }
     ros::Duration(sleepTime).sleep();
@@ -233,7 +248,7 @@ void mapAlg::mapCommandsCalback(const sar_drone::directions::ConstPtr& msg){
         }
 
         case STOP_SEARCH:{
-            local_status = STOPPING;
+            local_status = STOP_NOW;
             break;
         }
 

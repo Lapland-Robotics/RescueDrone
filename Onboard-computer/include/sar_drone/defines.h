@@ -14,6 +14,9 @@
 #define SPEED_SLOW 1.0
 
 #define PI 3.14159265
+#define HORIZON_THRESHOLD 0.5
+#define VERTICAL_THRESHOLD 0.1
+#define YAW_THRESHOLD (0.025 * PI)
 
 namespace SaR_Drone{
     enum msgCommands{
@@ -69,17 +72,24 @@ namespace SaR_Drone{
 
         MAPPING_ALGORITM_DIDNT_FINISH_MOVE = 40,
 
+        ERROR = 105,
         MANUAL_CONTROLL = 112,
 
+        MOVING_SC = 200,
+        NEXT_STEP = 201,
 
         STARTING_UP = 255
     };
 
     enum MobileErrorCodes{
         NO_ERROR = 0,
+        CANT_GIVE_MANUAL_CONTROLLE = 2,
+        START_LANDING = 3,
 
         ERROR_WITH_TAKEOFF = 10,
+        DRONE_ALREADY_FLYING = 12,
         ERROR_WITH_LANDING = 11,
+        DRONE_ALREADY_ON_GROUND = 13,
 
         NO_INSTRUCTIONS_RECEIVED = 20
     };

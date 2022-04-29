@@ -40,36 +40,30 @@ namespace SaR_Drone{
         statusCodes Status;
         statusCodes OldStatus;
 
-        void updateStatus(statusCodes newStatus){
-            sar_drone::status pub_msg;
-            pub_msg.Status = newStatus;
-            drone_status_pub.publish(pub_msg);
-
-            OldStatus = Status;
-            Status = newStatus;
-        }
+        void updateStatus(statusCodes newStatus);
 
         enum Moving{
             IDLE, 
             MOVING,
             ROTATING,
-            BREAKING,
+            BREAKING
         };
 
-        bool StartMoveRelativeGround(float x, float y, float z, bool headless);
-        bool StartMoveRelativeBody(float x, float y, float z);
-        //bool rotate
+        void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground);
+        void StartRotate(float ofset, bool relative_current_rot); 
+
         float getDirectionAngle(float x, float y);
 
         bool flying;
         bool landing;
+        bool gotCtrlAuthority;
 
         ServiceAck obtainCtrlAuthority();
+        ServiceAck releaseControle();
         bool takeoff();
         bool land();
 
         bool takeoff_land(int task);
-
 
         ros::ServiceClient drone_task_service;
         ros::ServiceClient sdk_ctrl_authority_service;
@@ -79,6 +73,7 @@ namespace SaR_Drone{
 
         ros::Publisher drone_ctrl_pos_yaw_pub;
         ros::Publisher drone_status_pub;
+        ros::Publisher send_mobile_data_pub;
 
         ros::NodeHandle nh_PRIO;
 
@@ -88,7 +83,8 @@ namespace SaR_Drone{
         Moving state;
         uint8_t counter;
 
-        uint8_t fail_counter;
+        uint8_t fail_counter_nm;
+        uint8_t fail_counter_OOB;
         geometry_msgs::Point fail_pos;
 
         float xTarget;
