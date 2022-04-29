@@ -6,9 +6,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,8 +19,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import dji.common.flightcontroller.LocationCoordinate3D;
 import dji.common.remotecontroller.HardwareState;
@@ -53,7 +58,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main_activity);
-        inSearch = true;
+        inSearch = false;
         handler = new Handler();
 
         initValues();
@@ -64,6 +69,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         registerReceiver(mReceiver, filter);
 
         CustomFun.HideNavBar(this);
+
     }
 
     @Override
@@ -71,12 +77,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         unregisterReceiver(mReceiver);
         super.onDestroy();
     }
-/*
-    public void onReturn(View view){
-        Log.e(TAG, "onReturn");
-        this.finish();
-    }
-*/
+
     @Override
     public void onResume() {
         CustomFun.HideNavBar(this);
@@ -118,7 +119,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @SuppressLint("SetTextI18n")
     private void refreshSDKRelativeUI() {
-        if (null != mProduct && mProduct.isConnected()) {
+        if (mProduct != null && mProduct.isConnected() && mFlightCon != null && mFlightCon.isConnected()) {
             Log.v(TAG, "refreshSDK: True");
 
             if (null != mProduct.getModel()) {
@@ -147,7 +148,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             finish();
         }
 
-        if (null != mRemoteCon && mRemoteCon.isConnected()){
+        if (mRemoteCon != null && mRemoteCon.isConnected()){
             mRemoteCon.setChargeRemainingCallback(batteryState ->
                     conBatteryTV.setText("remaining charge: " + batteryState.getRemainingChargeInmAh() +
                                          "mAh (" + batteryState.getRemainingChargeInPercent() + "%)"));
@@ -155,6 +156,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 @Override
                 public void onUpdate(@NonNull HardwareState hardwareState) {
                     if(inSearch && (Objects.requireNonNull(hardwareState.getLeftStick()).getVerticalPosition() != 0 || hardwareState.getLeftStick().getHorizontalPosition() != 0 || Objects.requireNonNull(hardwareState.getRightStick()).getHorizontalPosition() != 0 || hardwareState.getRightStick().getVerticalPosition() != 0)){
+                        byte[] sendData = {(byte) 0x02};
+                        mFlightCon.sendDataToOnboardSDKDevice(sendData, djiError -> {
+                            if(djiError != null){
+                                showToast(djiError.getDescription());
+                            }
+                        });
                         showToast("manual override");
                         inSearch = false;
                     }
@@ -188,17 +195,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 Intent intent = new Intent(this, LiveMapActivity.class);
                 startActivity(intent);
                 refreshSDKRelativeUI();
-                /*
-                gps = true;
-                mFlightCon.setStateCallback(flightControllerState -> {
-                    LocationCoordinate3D location = flightControllerState.getAircraftLocation();
-                    if(Double.isNaN(location.getLatitude())){gpsTV.setText("got NaN");}
-                    else {
-                        gpsTV.setText("lat: " + location.getLatitude() + " long: " + location.getLongitude() + " alt: " + location.getAltitude() +
-                                "\nSatCount: " + flightControllerState.getSatelliteCount() + " SignalLevel: " + flightControllerState.getGPSSignalLevel());
-                    }
-                });
-                // */
 
                 break;
             }
