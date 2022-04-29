@@ -38,6 +38,7 @@ namespace SaR_Drone{
             WAIT_MANUAL_OVERRIDE,
             WAIT_HUMAN_DETECTION,
             STOPPING,
+            STOP_NOW,
         };
 
         localStatus local_status;

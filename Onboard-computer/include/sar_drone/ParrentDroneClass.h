@@ -34,7 +34,7 @@ namespace SaR_Drone{
         }; 
 
         bool isReady(){return ready;}
-        void spin(double sleepTime){ros::spinOnce(); ros::Duration(sleepTime).sleep();}
+        void spin(double sleepTime){ros::spinOnce(); ros::Duration(sleepTime).sleep();ros::spinOnce();}
     
     protected:
         ros::NodeHandle nh;
