@@ -4,7 +4,6 @@ from threading import Timer
 import threading
 import Jetson.GPIO as GPIO
 import time
-#from multiprocessing.connection import wait
 from uvctypes import *
 from asyncore import ExitNow
 import cv2
@@ -18,8 +17,9 @@ try:
 except ImportError:
   from Queue import Queue
 
-callbackData = 0
 AIDone = False
+personDetected = False
+needToRun = False
 
 def TimerCallback():
   global AIDone
@@ -35,9 +35,11 @@ def talker(tmp):
 	pub.publish(pub_val)
 
 def callback(data):
-  global callbackData
-  callbackData=data.Command
+  global needToRun
+  callbackData = data.Command
   rospy.loginfo("%d", callbackData)
+  if callbackData == 5:
+    needToRun = True
  
 def listener():
 	rospy.init_node('talker', anonymous=True)
@@ -52,12 +54,7 @@ def py_frame_callback(frame, userptr):
 
   array_pointer = cast(frame.contents.data, POINTER(c_uint16 * (frame.contents.width * frame.contents.height)))
   data = np.frombuffer(array_pointer.contents, dtype=np.dtype(np.uint16)).reshape(frame.contents.height, frame.contents.width) # no copy
-
-  # data = np.fromiter(
-  #   frame.contents.data, dtype=np.dtype(np.uint8), count=frame.contents.data_bytes
-  # ).reshape(
-  #   frame.contents.height, frame.contents.width, 2
-  # ) # copy
+  # data = np.fromiter(frame.contents.data, dtype=np.dtype(np.uint8), count=frame.contents.data_bytes).reshape(frame.contents.height, frame.contents.width, 2)
 
   if frame.contents.data_bytes != (2 * frame.contents.width * frame.contents.height):
     return
@@ -87,7 +84,6 @@ def raw_to_8bit(data):
 
 def servo(angle):
   servo = 32 #GPIO pin
-
   start = 4 #4 is 45 degr
   stop = 8 #8 is stop
   eyelevel = 2.5 #2.5 is 90 degr
@@ -112,6 +108,10 @@ def ircam():
   dev = POINTER(uvc_device)()
   devh = POINTER(uvc_device_handle)()
   ctrl = uvc_stream_ctrl()
+  global AIDone
+  global personDetected
+  global needToRun
+  servo(4)
 
   res = libuvc.uvc_init(byref(ctx), 0)
   if res < 0:
@@ -132,8 +132,8 @@ def ircam():
 
       print("device opened!")
 
-      print_device_info(devh)
-      print_device_formats(devh)
+      #print_device_info(devh)
+      #print_device_formats(devh)
 
       frame_formats = uvc_get_frame_formats_by_guid(devh, VS_FMT_GUID_Y16)
       if len(frame_formats) == 0:
@@ -153,54 +153,79 @@ def ircam():
 
       print("Body temperature detection starts now.")
       talker(0) #Bodytemp detection starts now
-      biggestC = 0
 
       try:
         while True:
-          data = q.get(True, 500)
-          if data is None:
-            break
-          
-          x = 0
-          y = 0
-          counter = 0
-          dataa = data
-          #print(dataa)
-          while x < 120:
-            while y < 160:
-              if dataa[x,y] > 29015: #Pixel more than 20 degrees Celcius
-                if dataa[x,y] < 30055: #Pixel less than 40 degrees Celcius
-                  counter = counter + 1
-              y = y + 1
-            y = 0
-            x = x + 1
-
-          #print(counter)
-          if counter >= 450: #If there is more than 200 out of 19200 pixels that has a value between 20 and 40 degrees Celcius, print bodytemp
-            counterC = counterC + 1
-            biggestC = biggestC + 1
-            if counterC % 5 == 0:
-              talker(1) #bodytemp in frame detected
-            x = 0
-            y = 0
-          elif counter < 450:
-            counterC = 0
-            biggestC = biggestC + 1
-            if counterC % 5 == 0:
-              talker(2) #no bodytemp in frame detected
-            x = 0
-            y = 0
-
-          counter = 0 #Reset counter for next frame
-          data = cv2.resize(data[:,:], (640, 480))
-          img = raw_to_8bit(data)
-          #cv2.imshow('Body temperature detection', img)
-          #cv2.waitKey(1)
+          if needToRun:
+            data = q.get(True, 500)
+            if data is None:
+              break
             
-          if (counterC >= 100):
-            talker(3) #bodytemp detection succeeded
-            break
+            x = 0
+            y = 0
+            counter = 0
+            dataa = data
+            while x < 120:
+              while y < 160:
+                if dataa[x,y] > 29015: #Pixel more than 17 degrees Celcius
+                  if dataa[x,y] < 30055: #Pixel less than 27.4 degrees Celcius
+                    counter = counter + 1
+                y = y + 1
+              y = 0
+              x = x + 1
 
+            #print(counter)
+            if counter >= 450: #If there is more than 450 out of 19200 pixels that has a value between 20 and 40 degrees Celcius, print bodytemp
+              counterC = counterC + 1
+              if counterC % 5 == 0:
+                talker(1) #bodytemp in frame detected
+              x = 0
+              y = 0
+            elif counter < 450:
+              counterC = 0
+              if counterC % 5 == 0:
+                talker(2) #no bodytemp in frame detected
+              x = 0
+              y = 0
+
+            counter = 0 #Reset counter for next frame
+            data = cv2.resize(data[:,:], (640, 480))
+            img = raw_to_8bit(data)
+            #cv2.imshow('Body temperature detection', img)
+            #cv2.waitKey(1)
+              
+            if (counterC >= 100): #if there are 100 frames which contains 450+ pixels of the required value, switch to the AI
+              talker(3) #bodytemp detection succeeded
+              AI()
+              if AIDone and not personDetected:
+                x = 0
+                y = 0
+                counter = 0
+                dataa = 0
+                counterC = 0
+                AIDone = False
+                personDetected = False
+                talker(15) #human recognition not succeeded, back to bodytemp detection
+                print("Human recognition not succeeded, back to bodytemp detection")
+              elif personDetected:
+                talker(16) #human recognition succeeded
+                print("Human recognition succeeded")
+                servo(8)
+                time.sleep(3)
+                GPIO.cleanup()
+                talker(17) #send GPS coordinates
+                x = 0
+                y = 0
+                counter = 0
+                dataa = 0
+                counterC = 0
+                AIDone = False
+                personDetected = False
+                needToRun = False
+          
+          else:
+            time.sleep(3)
+            
         cv2.destroyAllWindows()
       finally:
         libuvc.uvc_stop_streaming(devh)
@@ -220,17 +245,20 @@ def AI():
   #Importing the camera stream
   #camera = jetson.utils.gstCamera(2560, 720, "/dev/video0") #ZED camera
   camera = jetson.utils.gstCamera(1920, 1080, "0") #RPI Cam
-  display = jetson.utils.glDisplay()
+  #display = jetson.utils.glDisplay()
   detects = 0
   talker(4) #human detection starts
   print("human detection starts now.")
   global AIDone
+  global personDetected
 
-  while detects < 251 and not(AIDone):
+  timer = threading.Timer(30.0, TimerCallback)
+  timer.start()
+
+  while detects < 251 and not(AIDone) and not personDetected:
     img, width, height = camera.CaptureRGBA()
     detections = net.Detect(img, width, height)
     #display.RenderOnce(img, width, height)
-    #display.SetSize(1920, 1080)
     #display.SetTitle("Search and Rescue Drone Advanced Detection System | Framerate {:.0f} FPS".format(net.GetNetworkFPS()))
     for detect in detections:
       #time.sleep(1)
@@ -238,89 +266,49 @@ def AI():
       ID = detect.ClassID
       item = net.GetClassDesc(ID)
       center = detect.Center
-      if (0 < center[0] < 641) and (720 < center[1] < 1081):
+      if (0 < center[0] < 641) and (720 < center[1] < 1081): #bottom left
         if detects % 5 == 0:
           talker(5)
-        #print("1") #bottom left
         detects = detects + 1
-        #print(detects)
-      elif (640 < center[0] < 1281) and (720 < center[1] < 1081):
+      elif (640 < center[0] < 1281) and (720 < center[1] < 1081): #bottom mid
         if detects % 5 == 0:
           talker(6)
-        #print("2") #bottom mid
         detects = detects + 1
-        #print(detects)
-      elif (1280 < center[0] < 1921) and (720 < center[1] < 1081):
+      elif (1280 < center[0] < 1921) and (720 < center[1] < 1081): #bottom right
         if detects % 5 == 0:
           talker(7)
-        #print("3") #bottom right
         detects = detects + 1
-        #print(detects)
-      elif (0 < center[0] < 641) and (360 < center[1] < 721):
+      elif (0 < center[0] < 641) and (360 < center[1] < 721): #mid left
         if detects % 5 == 0:
           talker(8)
-        #print("4") #mid left
         detects = detects + 1
-        #print(detects)
-      elif (640 < center[0] < 1281) and (360 < center[1] < 721):
+      elif (640 < center[0] < 1281) and (360 < center[1] < 721): #mid
         if detects % 5 == 0:
           talker(9)
-        #print("5") #mid
         detects = detects + 1
-        #print(detects)
-      elif (1280 < center[0] < 1921) and (360 < center[1] < 721):
+      elif (1280 < center[0] < 1921) and (360 < center[1] < 721): #mid right
         if detects % 5 == 0:
           talker(10)
-        #print("6") #mid right
         detects = detects + 1
-        #print(detects)
-      elif (0 < center[0] < 641) and (0 < center[1] < 361):
+      elif (0 < center[0] < 641) and (0 < center[1] < 361): #top left
         if detects % 5 == 0:
           talker(11)
-        #print("7") #top left
         detects = detects + 1
-        #print(detects)
-      elif (640 < center[0] < 1281) and (0 < center[1] < 361):
+      elif (640 < center[0] < 1281) and (0 < center[1] < 361): #top mid
         if detects % 5 == 0:
           talker(12)
-        #print("8") #top mid
         detects = detects + 1
-        #print(detects)
-      elif (1280 < center[0] < 1921) and (0 < center[1] < 361):
+      elif (1280 < center[0] < 1921) and (0 < center[1] < 361): #top right
         if detects % 5 == 0:
           talker(13)
-        #print("9") #top right
         detects = detects + 1
-        #print(detects)
       else:
         talker(14) #no human, detection resets
         detects = 0
 
-  if not AIDone:
-    talker(16) #human recognition succeeded
-    print("Human recognition succeeded")
-    time.sleep(3)
-    GPIO.cleanup()
-    talker(17) #send GPS coordinates
-  else:
-    talker(15) #human recognition not succeeded, back to bodytemp detection
-    print("Human recognition not succeeded, back to bodytemp detection")
+      if detects == 250:
+        personDetected = True
 
 if _name_ == '_main_':
   listener()
-  AIDone
-  while True:
-    if callbackData == 5:
-      servo(4)
-      time.sleep(3)
-      ircam()
-      timer = threading.Timer(30.0, TimerCallback)
-      timer.start()
-      AI()
-      if AIDone != False:
-        servo(8)
-        callbackData = 5
-        print("false")
-      else:
-        callbackData = 0
-        print("true")
+  ircam()
