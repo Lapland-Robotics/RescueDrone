@@ -7,13 +7,15 @@ ParrentDroneClass::ParrentDroneClass(){
     ready = false;
     drone_activation_service = nh.serviceClient<dji_sdk::Activation>("dji_sdk/activation");
 
-    if (activateSDK().result){
-        ROS_INFO("OSDK activated successfull");
-        ready = true;
-    }
-    else{
-        ROS_WARN("Faild to activate OSDK");
-        ready = false;
+    while(!ready){
+        if (activateSDK().result){
+            ROS_WARN("OSDK activated successfull");
+            ready = true;
+        }
+        else{
+            ROS_WARN("Faild to activate OSDK");
+        }
+        spin(0.5);
     }
 
 }

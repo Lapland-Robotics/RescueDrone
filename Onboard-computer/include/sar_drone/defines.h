@@ -56,7 +56,9 @@ namespace SaR_Drone{
         HD_TURN_LEFT = 117,
         HD_TURN_RIGHT = 118,
         HD_UP = 119,
-        HD_DOWN = 120
+        HD_DOWN = 120,
+
+        ARE_YOU_ALIVE = 200,
     };
 
     enum statusCodes{
@@ -91,7 +93,9 @@ namespace SaR_Drone{
         ERROR_WITH_LANDING = 11,
         DRONE_ALREADY_ON_GROUND = 13,
 
-        NO_INSTRUCTIONS_RECEIVED = 20
+        NO_INSTRUCTIONS_RECEIVED = 20,
+
+        NOT_READY_YET = 200,
     };
 }
 

@@ -87,11 +87,8 @@ namespace SaR_Drone{
         uint8_t fail_counter_OOB;
         geometry_msgs::Point fail_pos;
 
-        float xTarget;
-        float yTarget;
-        float zTarget;
-        float rTarget;
-
+        float xTarget, yTarget, zTarget, rTarget;
+        float xStart, yStart;
         float lastx, lasty, lastz;
 
         uint8_t flag;

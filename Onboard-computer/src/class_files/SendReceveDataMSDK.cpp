@@ -6,6 +6,7 @@ using namespace DJI::OSDK;
 SendReceveDataMSDK::SendReceveDataMSDK(): msg_ID(1)
 {
     if(ready){
+        ready = false;
         from_mobile_data_subscriber = nh.subscribe<dji_sdk::MobileData>("dji_sdk/from_mobile_data", 10, &SendReceveDataMSDK::fromMobileDataSubscriberCallback, this);
         send_mobile_data_subscriber = nh.subscribe<sar_drone::send_mobile>(SEND_TO_MOBILE, 10, [this](const sar_drone::send_mobile::ConstPtr& msg){
             dataToMobile MobileSend;
@@ -18,68 +19,14 @@ SendReceveDataMSDK::SendReceveDataMSDK(): msg_ID(1)
 
         mobile_data_service = nh.serviceClient<dji_sdk::SendMobileData>("dji_sdk/send_data_to_mobile");
         
-        drone_commands_pub = nh.advertise<sar_drone::directions>(DIRECTIONS_TOPPIC, 25);
         drone_PRIO_commands_pub = nh.advertise<sar_drone::directions>(DIRECTIONS_PRIO_TOPPIC, 25);
         map_commands_pub = nh.advertise<sar_drone::directions>(MAP_TOPPIC, 10);
-        
-        sar_drone::directions msg;
-        msg.ID = 1;
-        msg.Command = 255;
 
-        while(drone_commands_pub.getNumSubscribers() == 0 || drone_PRIO_commands_pub.getNumSubscribers() == 0){
+        while(drone_PRIO_commands_pub.getNumSubscribers() == 0 || map_commands_pub.getNumSubscribers() == 0){
             ROS_WARN_STREAM("No subscribers connected");
             ros::Duration(0.5).sleep();
         }
-        
-        drone_commands_pub.publish(msg);
-    }
-    else{ //debugging and testing
-
-        ROS_WARN_STREAM("entering debug and testing mode. Not connected to drone");
-        drone_commands_pub = nh.advertise<sar_drone::directions>(DIRECTIONS_TOPPIC, 25);
-        drone_PRIO_commands_pub = nh.advertise<sar_drone::directions>(DIRECTIONS_PRIO_TOPPIC, 25);
-        map_commands_pub = nh.advertise<sar_drone::directions>(MAP_TOPPIC, 10);
-        
-        sar_drone::directions msg;
-
-        while(drone_commands_pub.getNumSubscribers() == 0 || drone_PRIO_commands_pub.getNumSubscribers() == 0){
-            ROS_WARN_STREAM("No subscribers connected");
-            ros::Duration(0.5).sleep();
-        }
-
-        msg.Command = 10;
-        drone_PRIO_commands_pub.publish(msg);
-        ros::Duration(0.5).sleep();
-
-        msg.ID = 0;
-        msg.Command = 20;
-        for(char i = 0; i < 20; i++){
-            msg.ID += 1;
-            drone_commands_pub.publish(msg);
-        }
-        ros::Duration(0.5).sleep();
-
-        msg.Command = 11;
-        drone_PRIO_commands_pub.publish(msg);
-            
-        msg.Command = 20;
-        for(char i = 0; i < 20; i++){
-            msg.ID += 1;
-            drone_commands_pub.publish(msg);
-        }
-
-        msg.Command = 10;
-        drone_PRIO_commands_pub.publish(msg);
-
-        ros::Duration(1).sleep();
-
-        msg.Command = 20;
-        for(char i = 0; i < 20; i++){
-            msg.ID += 1;
-            drone_commands_pub.publish(msg);
-        }
-
-        ROS_INFO_STREAM("data send succesfuly");
+        ready = true;
     }
   }
 
@@ -172,6 +119,15 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
             msg.Latitude = MobileReseive.Latitude;
             msg.Longitude = MobileReseive.Longitude;
             map_commands_pub.publish(msg);
+            break;
+        }
+
+        case ARE_YOU_ALIVE:{
+            ROS_INFO_STREAM("Got alive request from MSDK");
+            dataToMobile MobileSend;
+            MobileSend.cmdID = ARE_YOU_ALIVE;
+            MobileSend.errorCode = ready ? NO_ERROR : NOT_READY_YET;
+            sendToMobile(MobileSend);
             break;
         }
 

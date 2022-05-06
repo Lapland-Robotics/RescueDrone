@@ -48,7 +48,6 @@ namespace SaR_Drone{
 
         ros::ServiceClient mobile_data_service;
         
-        ros::Publisher drone_commands_pub;
         ros::Publisher drone_PRIO_commands_pub;
         ros::Publisher map_commands_pub;
     };

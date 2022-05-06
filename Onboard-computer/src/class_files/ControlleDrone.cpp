@@ -28,6 +28,7 @@ ControlleDrone::ControlleDrone(){
         ServiceAck ack = obtainCtrlAuthority();
         if (ack.result){
             ROS_INFO("Obtain SDK control Authority successfully");
+            gotCtrlAuthority = true;
         }
         else{
             if (ack.ack_data == 3 && ack.cmd_set == 1 && ack.cmd_id == 0){
@@ -36,35 +37,22 @@ ControlleDrone::ControlleDrone(){
             }
             else{
                 ROS_WARN("Failed Obtain SDK control Authority");
-                ready = false;
+                gotCtrlAuthority = false;
+                
             }
         }
-        gotCtrlAuthority = ready;
 
         spin(1.0);
         // ROS_INFO_STREAM("\nGPS:\n\tlatitude: " <<(double) getGPS().latitude << "\n\tlongitude: " << getGPS().longitude << "\n\taltitude: " << getGPS().altitude << "\nRotation: " << getRotation().z << "\npoint \n\tx: " << getPos().x << "\n\ty: " << getPos().y << "\n\tz: " << getPos().z);
         
+        updateStatus(ON_GROUND);
     }
-    else{ //debugging and testing
-
-        ROS_WARN_STREAM("entering debug and testing mode. Not connected to drone");
-
-        ros::CallbackQueue *PRIO_Calback_queue_ptr = &PRIO_Calback_queue;
-
-        nh_PRIO.setCallbackQueue(PRIO_Calback_queue_ptr);
-
-        drone_commands_sub = nh.subscribe(DIRECTIONS_TOPPIC, 50, &ControlleDrone::directionsCallback, this);
-        drone_PRIO_commands_sub = nh_PRIO.subscribe(DIRECTIONS_PRIO_TOPPIC, 50, &ControlleDrone::directionsPRIOCallback, this);
-
-        PRIO_thread_spinner = std::thread([this, PRIO_Calback_queue_ptr](){
-            ros::SingleThreadedSpinner PRIO_spinner;
-            PRIO_spinner.spin(PRIO_Calback_queue_ptr);
-        });
-
-        //ros::spin();
+    else{
+        updateStatus(ERROR);
+        state = IDLE;
     }
     
-    updateStatus(ON_GROUND);
+    
 }
 
 ControlleDrone::~ControlleDrone(){
@@ -133,7 +121,7 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
                     if(tmpcounter < 5){
                         tmpcounter ++;
                         if (ack.ack_data == 3 && ack.cmd_set == 1 && ack.cmd_id == 0){
-                            ROS_INFO("releqseControle SDK control Authority in progess, send the cmd again");
+                            ROS_INFO("releaseControl SDK control Authority in progess, send the cmd again");
                             obtainCtrlAuthority();
                         }
                         else{
@@ -221,7 +209,7 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
 
 void ControlleDrone::step(double sleepTime){
     spin(sleepTime);
-    if(Status == MANUAL_CONTROLL){
+    if(Status == MANUAL_CONTROLL || Status == ERROR){
         // ROS_WARN_STREAM("manual controll");
         spin(0.1);
     }
@@ -276,26 +264,26 @@ void ControlleDrone::step(double sleepTime){
                         lastz = fail_pos.z;
                     }
 
-                    if(std::abs(xcmd) < SPEED_MIDDLE * 1.5){
+                    if(std::abs(xcmd) < SPEED_MIDDLE * 1.5 || std::abs(pos.x - xStart) < SPEED_MIDDLE * 1.5){
                         xcmd = (std::abs(xcmd) >= SPEED_SLOW) ? ((xcmd > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : xcmd;
                     }
-                    else if(std::abs(xcmd) < SPEED_FAST * 2){
+                    else if(std::abs(xcmd) < SPEED_FAST * 2 || std::abs(pos.x - xStart) < SPEED_FAST * 2){
                         xcmd = xcmd > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
                     }
-                    else if(std::abs(xcmd) < DISTANCE_SLOWER){
+                    else if(std::abs(xcmd) < DISTANCE_SLOWER || std::abs(pos.x - xStart) < DISTANCE_SLOWER){
                         xcmd = xcmd > 0 ? SPEED_FAST : SPEED_FAST * -1;
                     }
                     else{
                         xcmd = xcmd > 0 ? SPEED_MAX : SPEED_MAX * -1;
                     }
                     
-                    if(std::abs(ycmd) < SPEED_MIDDLE * 1.5){
+                    if(std::abs(ycmd) < SPEED_MIDDLE * 1.5 || std::abs(pos.y - yStart) < SPEED_MIDDLE * 1.5){
                         ycmd = (std::abs(ycmd) >= SPEED_SLOW) ? ((ycmd > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : ycmd;
                     }
-                    else if(std::abs(ycmd) < SPEED_FAST * 2){
+                    else if(std::abs(ycmd) < SPEED_FAST * 2 || std::abs(pos.y - yStart) < SPEED_FAST * 2){
                         ycmd = ycmd > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
                     }
-                    else if(std::abs(ycmd) < DISTANCE_SLOWER){
+                    else if(std::abs(ycmd) < DISTANCE_SLOWER || std::abs(pos.y - yStart) < DISTANCE_SLOWER){
                         ycmd = ycmd > 0 ? SPEED_FAST : SPEED_FAST * -1;
                     }
                     else{
@@ -448,6 +436,9 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
         xTarget = fail_pos.x + x;
         yTarget = fail_pos.y + y;
         zTarget = fail_pos.z + z;
+
+        xStart = fail_pos.x;
+        yStart = fail_pos.y;
 
         lastx = 0;
         lasty = 0;

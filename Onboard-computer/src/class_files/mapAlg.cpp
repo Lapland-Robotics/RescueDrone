@@ -39,28 +39,6 @@ void mapAlg::step(double sleepTime){
                 break;
             }
 
-            case CREATE_ROUTE:{
-                ROS_INFO_STREAM("Create route");
-                route.clear();
-                route_index = 0;
-                if(demo){
-                    route.emplace_back(0,0);
-                    route.emplace_back(10,10);
-                    route.emplace_back(-10,10);
-                    route.emplace_back(10,-10);
-                    route.emplace_back(-10,-10);
-                }
-                else{
-                    //create optimal route algoritm
-                }
-
-                
-                ROS_INFO_STREAM("route created");
-                local_status = IDLE;
-                got_route = true;
-                break;
-            }
-
             case GOING_TO_START:{
                 ROS_INFO_STREAM("Go to start");
                 
@@ -255,7 +233,7 @@ void mapAlg::mapCommandsCalback(const sar_drone::directions::ConstPtr& msg){
         case START_COORDINATES:{
             start_location.first = msg->Latitude;
             start_location.first = msg->Longitude;
-            local_status = demo ? CREATE_ROUTE : GOING_TO_START;
+            CreateRoute();
         }
 
         case EMERGENCY_SHUTDOWN:
@@ -265,4 +243,25 @@ void mapAlg::mapCommandsCalback(const sar_drone::directions::ConstPtr& msg){
         default:
             break;
     }
+}
+
+void mapAlg::CreateRoute(){
+    ROS_INFO_STREAM("Create route");
+    route.clear();
+    route_index = 0;
+    if(demo){
+        route.emplace_back(0,0);
+        route.emplace_back(10,10);
+        route.emplace_back(-10,10);
+        route.emplace_back(10,-10);
+        route.emplace_back(-10,-10);
+    }
+    else{
+        //create optimal route algoritm
+    }
+
+    
+    ROS_INFO_STREAM("route created");
+    local_status = IDLE;
+    got_route = true;
 }

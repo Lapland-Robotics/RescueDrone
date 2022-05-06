@@ -1,0 +1,16 @@
+<launch>
+	<node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk">
+		<!-- node parameters -->
+		<param name="acm_name" type="string" value="/dev/ttyACM0"/>
+		<param name="serial_name" type="string" value="/dev/ttyUSB0"/>
+		<param name="baud_rate" type="int" value="921600"/>
+		<param name="app_id" type="int" value="1114965"/>
+		<param name="app_version" type="int" value="1"/>
+		<param name="align_time" type="bool" value="false"/>
+		<param name="enc_key" type="string" value="b1cf6391835d544247603051f88d8f045ea1c19338d344675e8cdad716f55b04"/>
+		<param name="use_broadcast" type="bool" value="false"/>
+    </node>
+	<node pkg="sar_drone" type="communication_with_drone" name="com_with_drone" respawn="false"/>
+	<node pkg="sar_drone" type="communication_with_MSDK" name="com_with_MSDK" respawn="true"/>
+	<node pkg="sar_drone" type="mapping_alg" name="mapping_alg" respawn="true"/>
+</launch>

@@ -25,11 +25,11 @@ namespace SaR_Drone{
 
     private:
         void mapCommandsCalback(const sar_drone::directions::ConstPtr& msg);
+        void CreateRoute();
 
         enum localStatus{
             OFF,
             IDLE,
-            CREATE_ROUTE,
             GOING_TO_START,
             MOVE_COMMAND_SEND,
             NEXT_MOVE,
