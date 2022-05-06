@@ -20,6 +20,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import dji.common.error.DJIError;
 import dji.common.flightcontroller.LocationCoordinate3D;
@@ -47,7 +49,11 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     private double lastLat;
     private double lastHead;
 
-    FlightController mFlightCon;
+    private FlightController mFlightCon;
+
+    private sound_timer beep;
+    private sound_timer battery;
+    private sound_timer found_person;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,6 +68,14 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         // registerReceiver(mReceiver, filter);
 
         CustomFun.HideNavBar(this);
+
+        beep = new sound_timer();
+        battery = new sound_timer();
+        found_person = new sound_timer();
+
+        beep.initSound(this, R.raw.one_beep);
+        battery.initSound(this, R.raw.one_battery_warning);
+        found_person.initSound(this, R.raw.one_found_person);
     }
 
     @Override
@@ -119,7 +133,7 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         RemoteController mRemoteCon = DroneConnection.getRemoteConInstance();
         mFlightCon = DroneConnection.getFlightConInstance();
 
-        if (null != mProduct && mProduct.isConnected()) {
+        if (mProduct != null && mProduct.isConnected() && mFlightCon != null && mFlightCon.isConnected()) {
 
             if (null != mProduct.getBatteries()){
                 List<Battery> batteries = mProduct.getBatteries();
@@ -132,9 +146,80 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                     tvDroneBat.setText("Multiple batteries detected");
                 }
             }
+            mFlightCon.setOnboardSDKDeviceDataCallback(bytes -> {
+                if(bytes.length == 0){
+                    showToast("ERROR: received nothing");
+                }
+                else {
+                    //showToast("length: " + bytes.length + " data: " + Arrays.toString(bytes));
+                    switch (Byte.toUnsignedInt(bytes[1])){
+                        case 0:
+                            switch (Byte.toUnsignedInt(bytes[0])) {
+                                case 0:
+                                    showToast("IDK");
+                                    break;
+
+                                case 2:
+                                    showToast("Successfully handed over controls");
+                                    break;
+
+                                case 10:
+                                    showToast("Successfully takeoff");
+                                    beep.stopTimer();
+                                    break;
+
+                                case 11:
+                                    showToast("Successfully land");
+                                    beep.stopTimer();
+                                    break;
+
+                                case 20:
+                                    showToast("successfully start Search");
+                                    break;
+                            }
+                            break;
+
+                        case 2:
+                            showToast("Can't give controls");
+                            break;
+
+                        case 3:
+                            showToast("landing in progress");
+                            if(beep.isPlaying()){
+                                beep.stopTimer();
+                            }
+                            beep.startTimer(200);
+                            break;
+
+                        case 10:
+                            showToast("error with takeoff");
+                            beep.stopTimer();
+                            break;
+
+                        case 11:
+                            showToast("error with land");
+                            beep.stopTimer();
+                            break;
+
+                        case 12:
+                            showToast("no need to tell again im already there ");
+                            beep.stopTimer();
+                            break;
+
+                        case 13:
+                            showToast("chill i'm already on the ground");
+                            beep.stopTimer();
+                            break;
+
+                        case 20:
+                            showToast("maybe give me some instructions???");
+                            break;
+                    }
+                }
+            });
 
         } else {
-            finish();
+//            finish();
         }
 
         if (null != mRemoteCon && mRemoteCon.isConnected()){
@@ -164,39 +249,6 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                 lastLat = location.getLatitude();
                 lastLong = location.getLongitude();
                 liveMapClass.updateDrone(lastLong, lastLat, 0, true);
-            }
-        });
-
-        mFlightCon.setOnboardSDKDeviceDataCallback(bytes -> {
-            if(bytes.length == 0){
-                showToast("ERROR: received nothing");
-            }
-            else {
-                //showToast("length: " + bytes.length + " data: " + Arrays.toString(bytes));
-                switch (Byte.toUnsignedInt(bytes[0])){
-                    case 20:{
-                        switch (Byte.toUnsignedInt(bytes[0])){
-                            case 0:
-                                showToast("successfully start Search");
-                                break;
-                            case 20:
-                                showToast("No instructions given");
-                        }
-                    }
-                    case 255:{
-                        //double tmp = toDouble(Arrays.copyOfRange(bytes, 8, 16));
-                        if(bytes[1] == Byte.toUnsignedInt(bytes[1])){
-                            showToast("last command sent successfully");
-                        }
-                        else{
-                            showToast("error with command :" + Byte.toUnsignedInt(bytes[1]));
-                        }
-                        break;
-                    }
-                    default:{
-                        showToast("unknown ID");
-                    }
-                }
             }
         });
     }
@@ -236,6 +288,10 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                     }
                 });
                 MainActivity.inSearch = true;
+                if(!beep.isPlaying()) {
+                    beep.startTimer(1000);
+                }
+
                 break;
             }
 
