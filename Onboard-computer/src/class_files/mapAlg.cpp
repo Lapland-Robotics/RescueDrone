@@ -14,11 +14,19 @@ mapAlg::mapAlg(): msg_ID(2)
     map_commands_sub = nh.subscribe<sar_drone::directions>(MAP_TOPPIC, 10, &mapAlg::mapCommandsCalback, this);
     drone_status_sub = nh.subscribe<sar_drone::status>(STATUS_TOPPIC, 10, [this](const sar_drone::status::ConstPtr& msg){
         status_drone = static_cast<statusCodes>(msg->Status);
+<<<<<<< HEAD
+=======
+        ROS_WARN_STREAM("status: " << status_drone);
+>>>>>>> Combining human detection and onboard computer #55 & #56
     });
     
     route_index = 0;
     demo = true;
     got_route = false;
+<<<<<<< HEAD
+=======
+    on_site = false;
+>>>>>>> Combining human detection and onboard computer #55 & #56
 }
 
 mapAlg::~mapAlg()
@@ -49,6 +57,7 @@ void mapAlg::step(double sleepTime){
                 return_msg.Longitude = start_location.second;
                 return_msg.z = 3;
                 drone_commands_pub.publish(return_msg);
+<<<<<<< HEAD
                 local_status = WAIT_MOVING;
                 break;
             }
@@ -56,17 +65,49 @@ void mapAlg::step(double sleepTime){
             case NEXT_MOVE:{
                 // ROS_INFO_STREAM("Next Move");
 
+=======
+
+                next_local_status = WAIT_STARTING;
+                local_status = MOVE_COMMAND_SEND;
+
+                break;
+            }
+
+            case START_HUMAN:{
+                sar_drone::directions return_msg;
+                return_msg.ID = msg_ID;
+                return_msg.Command = MA_START_HUMAN_DETECT;
+
+                drone_commands_pub.publish(return_msg);
+
+                next_local_status = WAIT_MOVING;
+                local_status = START_HUMAN_SEND;
+
+                break;
+            }
+
+            case NEXT_MOVE:{
+>>>>>>> Combining human detection and onboard computer #55 & #56
                 sar_drone::directions return_msg;
                 return_msg.ID = msg_ID;
                 return_msg.Command = MA_MOVE_RELATIVE_GROUND;
 
                 return_msg.x = route.at(route_index).first;
                 return_msg.y = route.at(route_index).second;
+<<<<<<< HEAD
                 return_msg.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 3 : 0;
                 return_msg.r = 0;
 
                 drone_commands_pub.publish(return_msg);
 
+=======
+                return_msg.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 5 : 0;
+                return_msg.r = 0;
+
+                drone_commands_pub.publish(return_msg);
+                
+                ROS_INFO_STREAM("Next Move send");
+>>>>>>> Combining human detection and onboard computer #55 & #56
                 route_index ++;
 
                 //ROS_INFO_STREAM("route index: " <<(int) route_index << "\troute size: " <<(int) route.size());
@@ -77,9 +118,23 @@ void mapAlg::step(double sleepTime){
                 break;
 
             }
+<<<<<<< HEAD
             
             case MOVE_COMMAND_SEND:{
                 if(status_drone != MAPPING_ALGORITM_NEXT_STEP){
+=======
+
+            case START_HUMAN_SEND:{
+                if(status_drone != MAPPING_ALGORITM_NEXT_STEP){
+                    local_status = next_local_status;
+                    start_time = ros::Time::now();
+                }
+                break;
+            }
+            
+            case MOVE_COMMAND_SEND:{
+                if(status_drone != MAPPING_ALGORITM_NEXT_STEP && status_drone != START_HUMAN_DETECTION){
+>>>>>>> Combining human detection and onboard computer #55 & #56
                     local_status = next_local_status;
                     start_time = ros::Time::now();
                 }
@@ -89,6 +144,10 @@ void mapAlg::step(double sleepTime){
             case WAIT_MOVING:{
                 //waiting for drone stoped moving
                 switch(status_drone){
+<<<<<<< HEAD
+=======
+                    case START_HUMAN_DETECTION:
+>>>>>>> Combining human detection and onboard computer #55 & #56
                     case MAPPING_ALGORITM_NEXT_STEP:
                         ROS_INFO_STREAM("next move");
                         local_status = NEXT_MOVE;
@@ -97,6 +156,11 @@ void mapAlg::step(double sleepTime){
                     case TAKING_OFF:
                     case LANDING:
                     case MAPPING_ALGORITM_MOVING:
+<<<<<<< HEAD
+=======
+                    case HUMAN_DETECTION_NEXT_STEP:
+                    case HUMAN_DETECTION_MOVING:
+>>>>>>> Combining human detection and onboard computer #55 & #56
                         break;
 
                     case ON_GROUND:
@@ -119,8 +183,14 @@ void mapAlg::step(double sleepTime){
                 //waiting for drone stoped moving
                 switch(status_drone){
                     case MAPPING_ALGORITM_NEXT_STEP:
+<<<<<<< HEAD
                         ROS_INFO_STREAM("first move");
                         local_status = NEXT_MOVE;
+=======
+                        ROS_INFO_STREAM("go to start");
+
+                        local_status = on_site ? START_HUMAN : GOING_TO_START;
+>>>>>>> Combining human detection and onboard computer #55 & #56
                         break;
                     
                     case TAKING_OFF:
@@ -251,10 +321,24 @@ void mapAlg::CreateRoute(){
     route_index = 0;
     if(demo){
         route.emplace_back(0,0);
+<<<<<<< HEAD
         route.emplace_back(10,10);
         route.emplace_back(-10,10);
         route.emplace_back(10,-10);
         route.emplace_back(-10,-10);
+=======
+        route.emplace_back(10,0);
+        route.emplace_back(0,5);
+        route.emplace_back(-10,0);
+        route.emplace_back(0,5);
+        route.emplace_back(10,0);
+        route.emplace_back(0,5);
+        route.emplace_back(-10,0);
+        route.emplace_back(0,5);
+        route.emplace_back(0,-20);
+        
+        on_site = true;
+>>>>>>> Combining human detection and onboard computer #55 & #56
     }
     else{
         //create optimal route algoritm

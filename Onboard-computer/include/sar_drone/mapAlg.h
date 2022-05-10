@@ -31,6 +31,11 @@ namespace SaR_Drone{
             OFF,
             IDLE,
             GOING_TO_START,
+<<<<<<< HEAD
+=======
+            START_HUMAN,
+            START_HUMAN_SEND,
+>>>>>>> Combining human detection and onboard computer #55 & #56
             MOVE_COMMAND_SEND,
             NEXT_MOVE,
             WAIT_MOVING,
@@ -51,6 +56,10 @@ namespace SaR_Drone{
 
         bool demo;
         bool got_route;
+<<<<<<< HEAD
+=======
+        bool on_site;
+>>>>>>> Combining human detection and onboard computer #55 & #56
         
         ros::Time start_time;
         ros::Duration elapsed_time;
