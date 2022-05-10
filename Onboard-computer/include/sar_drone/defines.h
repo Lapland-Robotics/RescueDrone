@@ -2,13 +2,8 @@
 #define DEFINES_H
 
 #define DIRECTIONS_TOPPIC "directions"
-<<<<<<< HEAD
-#define MAP_TOPPIC "mapAlg"
-#define DIRECTIONS_PRIO_TOPPIC "directionsPRIO"
-=======
 #define DIRECTIONS_PRIO_TOPPIC "directionsPRIO"
 #define MAP_TOPPIC "mapAlg"
->>>>>>> Combining human detection and onboard computer #55 & #56
 #define STATUS_TOPPIC "status"
 #define SEND_TO_MOBILE "mobile_messages"
 
@@ -23,11 +18,8 @@
 #define VERTICAL_THRESHOLD 0.1
 #define YAW_THRESHOLD (0.025 * PI)
 
-<<<<<<< HEAD
-=======
 #define HD_MOVE 1.0
 
->>>>>>> Combining human detection and onboard computer #55 & #56
 namespace SaR_Drone{
     enum msgCommands{
         //PRIO Commands
@@ -50,10 +42,7 @@ namespace SaR_Drone{
 
         //mapping alg -> controll drone commands
         
-<<<<<<< HEAD
-=======
         MA_START_HUMAN_DETECT = 44,
->>>>>>> Combining human detection and onboard computer #55 & #56
         MA_MOVE_COORDINATES = 45,
         MA_MOVE_RELATIVE_GROUND_HEADLESS = 46,
         MA_MOVE_RELATIVE_GROUND = 47,
@@ -67,12 +56,6 @@ namespace SaR_Drone{
         HD_BACKWARD = 114,
         HD_LEFT = 115,
         HD_RIGHT = 116,
-<<<<<<< HEAD
-        HD_TURN_LEFT = 117,
-        HD_TURN_RIGHT = 118,
-        HD_UP = 119,
-        HD_DOWN = 120,
-=======
         HD_FORWARD_LEFT = 117,
         HD_FORWARD_RIGHT = 118,
         HD_BACKWARD_LEFT = 119,
@@ -81,7 +64,6 @@ namespace SaR_Drone{
         HD_DOWN = 122,
         HD_TURN_LEFT = 123,
         HD_TURN_RIGHT = 124,
->>>>>>> Combining human detection and onboard computer #55 & #56
 
         ARE_YOU_ALIVE = 200,
     };
@@ -95,13 +77,9 @@ namespace SaR_Drone{
         HUMAN_DETECTION_MOVING = 6,
         FOUND_HUMAN = 7,
         BACK_TO_BASE = 8,
-<<<<<<< HEAD
-        LANDING = 8,
-=======
         LANDING = 9,
         
         START_HUMAN_DETECTION = 10,
->>>>>>> Combining human detection and onboard computer #55 & #56
 
         MAPPING_ALGORITM_DIDNT_FINISH_MOVE = 40,
 

@@ -63,10 +63,7 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
     if(flying && !landing)
     { 
         switch(Status){
-<<<<<<< HEAD
-=======
             case START_HUMAN_DETECTION:
->>>>>>> Combining human detection and onboard computer #55 & #56
             case MAPPING_ALGORITM_NEXT_STEP:{
                 switch (static_cast<msgCommands>(msg->Command)){
                     case MA_MOVE_RELATIVE_GROUND_HEADLESS:{
@@ -80,14 +77,11 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
                         StartMoveDrone(msg->x, msg->y, msg->z, false, true);
                         break;
                     }
-<<<<<<< HEAD
-=======
 
                     case MA_START_HUMAN_DETECT:{
                         updateStatus(START_HUMAN_DETECTION);
                         break;
                     }
->>>>>>> Combining human detection and onboard computer #55 & #56
                     
                     default:{
                         ROS_WARN_STREAM("wrong command for directions Calback (" << (int) msg->Command << ")");
@@ -97,9 +91,7 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
                 break;
             }
             case HUMAN_DETECTION_NEXT_STEP:{
-<<<<<<< HEAD
-                ROS_INFO_STREAM("Human detection controll");
-=======
+                // ROS_INFO_STREAM("Human detection controll");
                 switch (static_cast<msgCommands>(msg->Command)){
                     case HD_FORWARD:{
                         StartMoveDrone(HD_MOVE, 0, 0, true, false);
@@ -151,7 +143,6 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
                         break;
                     }
                 }
->>>>>>> Combining human detection and onboard computer #55 & #56
             }
         }
         ros::Duration(0.1).sleep();
@@ -264,11 +255,6 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
         }
         
         case HD_FOUND_PERSON_I_THINK:{
-<<<<<<< HEAD
-            ROS_INFO_STREAM("found potential person");
-            // whoIsInControl = HUMANDETECTION;
-        }
-=======
             ROS_WARN_STREAM("found potential person");
             updateStatus(HUMAN_DETECTION_NEXT_STEP);
             StopMoving();
@@ -295,7 +281,6 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
             break;
         }
 
->>>>>>> Combining human detection and onboard computer #55 & #56
         default:
             ROS_WARN_STREAM("wrong command for directions PRIO Calback");
             break;
@@ -322,11 +307,7 @@ void ControlleDrone::step(double sleepTime){
                     float zcmd = zTarget - pos.z;
 
                     if(elapsed_move_time > ros::Duration(1.0)){
-<<<<<<< HEAD
-                        ROS_INFO_STREAM("\nx: " << xcmd << "\t" << pos.x << "\ny: " << ycmd << "\t" << pos.y << "\nz: " << zcmd << "\t" << pos.z << "\nr: " << getRotation().z);
-=======
                         //ROS_INFO_STREAM("\nx: " << xcmd << "\t" << pos.x << "\ny: " << ycmd << "\t" << pos.y << "\nz: " << zcmd << "\t" << pos.z << "\nr: " << getRotation().z);
->>>>>>> Combining human detection and onboard computer #55 & #56
                         start_move_time = ros::Time::now();
                         fail_pos = getPos();
                         if((std::abs(fail_pos.x - lastx) < 0.2) && (std::abs(fail_pos.y - lasty) < 0.2) && (std::abs(fail_pos.z - lastz) < 0.1)){
@@ -356,11 +337,7 @@ void ControlleDrone::step(double sleepTime){
                             }
                         } 
                         else{
-<<<<<<< HEAD
-                            fail_counter_nm = 0;
-=======
                             fail_counter_OOB = 0;
->>>>>>> Combining human detection and onboard computer #55 & #56
                         } 
                         lastx = fail_pos.x;
                         lasty = fail_pos.y;
@@ -479,10 +456,7 @@ void ControlleDrone::updateStatus(statusCodes newStatus){
         case MOVING_SC:
             switch(Status){
                 case TAKING_OFF:
-<<<<<<< HEAD
-=======
                 case START_HUMAN_DETECTION:
->>>>>>> Combining human detection and onboard computer #55 & #56
                 case MAPPING_ALGORITM_NEXT_STEP:
                         pub_msg.Status = MAPPING_ALGORITM_MOVING;
                         OldStatus = Status;
@@ -539,13 +513,6 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
 
         fail_counter_nm = 0;
         fail_pos = getPos();
-<<<<<<< HEAD
-        
-        xTarget = fail_pos.x + x;
-        yTarget = fail_pos.y + y;
-        zTarget = fail_pos.z + z;
-=======
->>>>>>> Combining human detection and onboard computer #55 & #56
 
         xStart = fail_pos.x;
         yStart = fail_pos.y;
@@ -554,25 +521,6 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
         lasty = 0;
         lastz = 0;
 
-<<<<<<< HEAD
-        if(relative_ground){
-            rTarget = headless ? getRotation().z : getDirectionAngle(x, y);
-
-            flag = (DJISDK::VERTICAL_VELOCITY   |
-                    DJISDK::HORIZONTAL_VELOCITY |
-                    DJISDK::YAW_ANGLE           |
-                    DJISDK::HORIZONTAL_GROUND   |
-                    DJISDK::STABLE_ENABLE);
-        }
-        else{
-            rTarget = headless ? getRotation().z : getRotation().z + getDirectionAngle(x, y);
-
-            flag = (DJISDK::VERTICAL_VELOCITY   |
-                    DJISDK::HORIZONTAL_VELOCITY |
-                    DJISDK::YAW_ANGLE           |
-                    DJISDK::HORIZONTAL_BODY     |
-                    DJISDK::STABLE_ENABLE);
-=======
         flag = (DJISDK::VERTICAL_VELOCITY   |
                 DJISDK::HORIZONTAL_VELOCITY |
                 DJISDK::YAW_ANGLE           |
@@ -595,7 +543,6 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
             xTarget = fail_pos.x + tmp.first;
             yTarget = fail_pos.y + tmp.second;
             zTarget = fail_pos.z + z;
->>>>>>> Combining human detection and onboard computer #55 & #56
         }
         
         if(!gotCtrlAuthority){
@@ -621,11 +568,7 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
     }
 }
 
-<<<<<<< HEAD
-void  ControlleDrone::StartRotate(float ofset, bool relative_current_rot){
-=======
 void ControlleDrone::StartRotate(float ofset, bool relative_current_rot){
->>>>>>> Combining human detection and onboard computer #55 & #56
     if(Status != MANUAL_CONTROLL){
         ROS_INFO_STREAM("Start Rotate");
         updateStatus(MOVING_SC);
@@ -664,8 +607,6 @@ void ControlleDrone::StartRotate(float ofset, bool relative_current_rot){
     }
 }
 
-<<<<<<< HEAD
-=======
 void ControlleDrone::StopMoving(){
     if(Status != MANUAL_CONTROLL){
         ROS_INFO_STREAM("Start Breaking");
@@ -698,7 +639,6 @@ void ControlleDrone::StopMoving(){
 
 }
 
->>>>>>> Combining human detection and onboard computer #55 & #56
 float ControlleDrone::getDirectionAngle(float x, float y){
     if(x == 0 && y == 0){
         ROS_WARN_STREAM("Im not moving horizontally!!!");
@@ -730,8 +670,6 @@ float ControlleDrone::getDirectionAngle(float x, float y){
     }
 }
 
-<<<<<<< HEAD
-=======
 std::pair<float, float> ControlleDrone::remapDirections(float x, float y, float r){
     if(x == 0 && y == 0){
         ROS_WARN_STREAM("Im not moving horizontally!!!");
@@ -758,7 +696,6 @@ std::pair<float, float> ControlleDrone::remapDirections(float x, float y, float 
         return tmp;
     }
 }
->>>>>>> Combining human detection and onboard computer #55 & #56
 
 ParrentDroneClass::ServiceAck ControlleDrone::obtainCtrlAuthority(){
   dji_sdk::SDKControlAuthority sdkAuthority;

@@ -52,14 +52,10 @@ namespace SaR_Drone{
         void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground);
         void StartRotate(float ofset, bool relative_current_rot); 
 
-<<<<<<< HEAD
-        float getDirectionAngle(float x, float y);
-=======
         void StopMoving();
 
         float getDirectionAngle(float x, float y);
         std::pair<float, float> remapDirections(float x, float y, float r);
->>>>>>> Combining human detection and onboard computer #55 & #56
 
         bool flying;
         bool landing;
@@ -67,10 +63,7 @@ namespace SaR_Drone{
 
         ServiceAck obtainCtrlAuthority();
         ServiceAck releaseControle();
-<<<<<<< HEAD
-=======
-
->>>>>>> Combining human detection and onboard computer #55 & #56
+        
         bool takeoff();
         bool land();
 

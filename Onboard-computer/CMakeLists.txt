@@ -10,10 +10,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake-modules)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
              roscpp
-<<<<<<< HEAD
-=======
              rospy
->>>>>>> Combining human detection and onboard computer #55 & #56
              dji_sdk
              std_msgs
              message_generation
@@ -82,11 +79,7 @@ generate_messages(
 catkin_package(
  INCLUDE_DIRS include
  LIBRARIES sar_drone
-<<<<<<< HEAD
- CATKIN_DEPENDS message_runtime 
-=======
  CATKIN_DEPENDS message_runtime rospy
->>>>>>> Combining human detection and onboard computer #55 & #56
 )
 
 #######################
