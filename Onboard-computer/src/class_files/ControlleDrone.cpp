@@ -7,13 +7,19 @@ ControlleDrone::ControlleDrone(){
     if(ready){
         flying = false;
         landing = false;
+        gotCtrlAuthority = false;
+        home_altitude = 0;
+
         ros::CallbackQueue *PRIO_Calback_queue_ptr = &PRIO_Calback_queue;
         nh_PRIO.setCallbackQueue(PRIO_Calback_queue_ptr);
 
         drone_task_service = nh.serviceClient<dji_sdk::DroneTaskControl>("dji_sdk/drone_task_control");
         sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority>("dji_sdk/sdk_control_authority");
+        set_local_pos_reference    = nh.serviceClient<dji_sdk::SetLocalPosRef> ("dji_sdk/set_local_pos_ref");
+
         drone_commands_sub = nh.subscribe(DIRECTIONS_TOPPIC, 50, &ControlleDrone::directionsCallback, this);
         drone_PRIO_commands_sub = nh_PRIO.subscribe(DIRECTIONS_PRIO_TOPPIC, 50, &ControlleDrone::directionsPRIOCallback, this);
+        
         drone_status_pub = nh.advertise<sar_drone::status>(STATUS_TOPPIC, 10);
         drone_ctrl_pos_yaw_pub = nh.advertise<sensor_msgs::Joy>("dji_sdk/flight_control_setpoint_generic", 10);
         send_mobile_data_pub = nh.advertise<sar_drone::send_mobile>(SEND_TO_MOBILE, 10);
@@ -67,18 +73,25 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
             case MAPPING_ALGORITM_NEXT_STEP:{
                 switch (static_cast<msgCommands>(msg->Command)){
                     case MA_MOVE_RELATIVE_GROUND_HEADLESS:{
-                        ros::Time start_time = ros::Time::now();
                         StartMoveDrone(msg->x, msg->y, msg->z, true, true);
                         break;
                     }
 
                     case MA_MOVE_RELATIVE_GROUND:{
-                        ros::Time start_time = ros::Time::now();
                         StartMoveDrone(msg->x, msg->y, msg->z, false, true);
                         break;
                     }
 
                     case MA_START_HUMAN_DETECT:{
+                        updateStatus(START_HUMAN_DETECTION);
+                        break;
+                    }
+
+                    case MA_MOVE_COORDINATES:{
+                        sensor_msgs::NavSatFix tmp;
+                        tmp.longitude = msg->Longitude;
+                        tmp.latitude = msg->Latitude;
+                        StartMoveDrone(tmp, false);
                         updateStatus(START_HUMAN_DETECTION);
                         break;
                     }
@@ -152,51 +165,10 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
 void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPtr& msg){
     switch (static_cast<msgCommands>(msg->Command)){
         case MANUAL_OVERRIDE:{
-            sar_drone::send_mobile toMobile;
-            toMobile.cmdID = MANUAL_OVERRIDE;
-        
             ROS_WARN_STREAM("Taking Manual controle of drone!");
 
             state = IDLE;
             updateStatus(MANUAL_CONTROLL);
-
-            bool finished;
-            uint8_t tmpcounter = 0;
-
-            do{
-                ServiceAck ack = releaseControle();
-                if (ack.result){
-                    ROS_INFO("released SDK control Authority successfully");
-                    
-                    toMobile.errorCode = MobileErrorCodes::NO_ERROR;
-
-                    finished = true;
-                    gotCtrlAuthority = false;
-                }
-                else{
-                    finished = false;
-                    if(tmpcounter < 5){
-                        tmpcounter ++;
-                        if (ack.ack_data == 3 && ack.cmd_set == 1 && ack.cmd_id == 0){
-                            ROS_INFO("releaseControl SDK control Authority in progess, send the cmd again");
-                            obtainCtrlAuthority();
-                        }
-                        else{
-                            ROS_WARN("Failed releqseControle SDK control Authority");
-                        }
-                    }
-                    else{
-                        ROS_ERROR_STREAM("You're Fucked ;) \n trying emergency landing");
-                        toMobile.errorCode = MobileErrorCodes::CANT_GIVE_MANUAL_CONTROLLE;
-                        land();
-                        finished = true;
-                    }
-                    
-                    spin(0.1);
-                }
-            }while(!finished);
-            
-            send_mobile_data_pub.publish(toMobile);
             break;
         }
 
@@ -281,6 +253,10 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
             break;
         }
 
+        case HD_START_AI:{
+            
+        }
+
         default:
             ROS_WARN_STREAM("wrong command for directions PRIO Calback");
             break;
@@ -291,6 +267,47 @@ void ControlleDrone::step(double sleepTime){
     spin(sleepTime);
     if(Status == MANUAL_CONTROLL || Status == ERROR){
         // ROS_WARN_STREAM("manual controll");
+        
+        if(gotCtrlAuthority)
+        {
+            sar_drone::send_mobile toMobile;
+            toMobile.cmdID = MANUAL_OVERRIDE;
+
+            state = IDLE;
+            updateStatus(MANUAL_CONTROLL);
+
+            bool finished;
+            uint8_t tmpcounter = 0;
+
+            do{
+                ServiceAck ack = releaseControle();
+                if (ack.result){
+                    ROS_INFO("released SDK control Authority successfully");
+                    
+                    toMobile.errorCode = MobileErrorCodes::NO_ERROR;
+
+                    finished = true;
+                    gotCtrlAuthority = false;
+                }
+                else{
+                    finished = false;
+                    if(tmpcounter < 5){
+                        tmpcounter ++;
+                        ROS_WARN("Failed release SDK control Authority");
+                    }
+                    else{
+                        ROS_ERROR_STREAM("You're Fucked ;) \n trying emergency landing");
+                        toMobile.errorCode = MobileErrorCodes::CANT_GIVE_MANUAL_CONTROLLE;
+                        land();
+                        finished = true;
+                    }
+                    
+                    spin(0.1);
+                }
+            }while(!finished);
+            send_mobile_data_pub.publish(toMobile);
+        }
+        
         spin(0.1);
     }
     else
@@ -301,17 +318,18 @@ void ControlleDrone::step(double sleepTime){
             start_time = ros::Time::now();
             switch(state){
                 case MOVING:{
-                    geometry_msgs::Point pos = getPos();
-                    float xcmd = xTarget - pos.x;
-                    float ycmd = yTarget - pos.y;
-                    float zcmd = zTarget - pos.z;
+                    geometry_msgs::Point pos = translateGPS(startGPS, getGPS());
+                    geometry_msgs::Point cmd;
+
+                    cmd.x = Target.x - pos.x;
+                    cmd.y = Target.y - pos.y;
+                    cmd.z = Target.z - pos.z;
 
                     if(elapsed_move_time > ros::Duration(1.0)){
-                        //ROS_INFO_STREAM("\nx: " << xcmd << "\t" << pos.x << "\ny: " << ycmd << "\t" << pos.y << "\nz: " << zcmd << "\t" << pos.z << "\nr: " << getRotation().z);
+                        //ROS_INFO_STREAM("\nx: " << cmd.x << "\t" << pos.x << "\ny: " << cmd.y << "\t" << pos.y << "\nz: " << cmd.z << "\t" << pos.z << "\nr: " << getRotation().z);
                         start_move_time = ros::Time::now();
-                        fail_pos = getPos();
-                        if((std::abs(fail_pos.x - lastx) < 0.2) && (std::abs(fail_pos.y - lasty) < 0.2) && (std::abs(fail_pos.z - lastz) < 0.1)){
-                            ROS_WARN_STREAM("drone stoped moving to early \n\tx: " << fail_pos.x << " - " << lastx << " = " << fail_pos.x - lastx << "\n\tx: " << fail_pos.y << " - " << lasty << " = " << fail_pos.y - lasty << "\n\tx: " << fail_pos.z << " - " << lastz << " = " << fail_pos.z - lastz );
+                        if((std::abs(pos.x - lastPos.x) < 0.2) && (std::abs(pos.y - lastPos.y) < 0.2) && (std::abs(pos.z - lastPos.z) < 0.1)){
+                            ROS_WARN_STREAM("drone stoped moving to early \n\tx: " << pos.x << " - " << lastPos.x << " = " << pos.x - lastPos.x << "\n\tx: " << pos.y << " - " << lastPos.y << " = " << pos.y - lastPos.y << "\n\tx: " << pos.z << " - " << lastPos.z << " = " << pos.z - lastPos.z );
                             if (fail_counter_nm < 5){
                                 fail_counter_nm ++;
                             }
@@ -325,8 +343,8 @@ void ControlleDrone::step(double sleepTime){
                             fail_counter_nm = 0;
                         } 
 
-                        if((std::abs(fail_pos.x - xTarget) > std::abs(xcmd) + 2) || (std::abs(fail_pos.y - yTarget) > std::abs(ycmd) + 2) || (std::abs(fail_pos.z - zTarget) > std::abs(zcmd) + 1)){
-                            ROS_WARN_STREAM("drone not on route \n\tx: " << fail_pos.x << " - " << xTarget << " = " << std::abs(fail_pos.x - xTarget) << " > " <<  std::abs(xcmd) + 2 << "\n\tx: " << fail_pos.y << " - " << yTarget << " = " << std::abs(fail_pos.y - yTarget) << " > " <<  std::abs(ycmd + 2) << "\n\tx: " << fail_pos.z << " - " << zTarget << " = " << std::abs(fail_pos.z - zTarget) << " > " << std::abs(zcmd) + 1 );
+                        if((std::abs(pos.x - Target.x) > std::abs(cmd.x) + 2) || (std::abs(pos.y - Target.y) > std::abs(cmd.y) + 2) || (std::abs(pos.z - Target.z) > std::abs(cmd.z) + 1)){
+                            ROS_WARN_STREAM("drone not on route \n\tx: " << pos.x << " - " << Target.x << " = " << std::abs(pos.x - Target.x) << " > " <<  std::abs(cmd.x) + 2 << "\n\tx: " << pos.y << " - " << Target.y << " = " << std::abs(pos.y - Target.y) << " > " <<  std::abs(cmd.y) + 2 << "\n\tx: " << pos.z << " - " << Target.z << " = " << std::abs(pos.z - Target.z) << " > " << std::abs(cmd.z) + 1 );
                             if (fail_counter_OOB < 5){
                                 fail_counter_OOB ++;
                             }
@@ -339,47 +357,47 @@ void ControlleDrone::step(double sleepTime){
                         else{
                             fail_counter_OOB = 0;
                         } 
-                        lastx = fail_pos.x;
-                        lasty = fail_pos.y;
-                        lastz = fail_pos.z;
+                        lastPos.x = pos.x;
+                        lastPos.y = pos.y;
+                        lastPos.z = pos.z;
                     }
 
-                    if(std::abs(xcmd) < SPEED_MIDDLE * 1.5 || std::abs(pos.x - xStart) < SPEED_MIDDLE * 1.5){
-                        xcmd = (std::abs(xcmd) >= SPEED_SLOW) ? ((xcmd > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : xcmd;
+                    if(std::abs(cmd.x) < SPEED_MIDDLE * 1.5 || std::abs(pos.x) < SPEED_MIDDLE * 1.5){
+                        cmd.x = (std::abs(cmd.x) >= SPEED_SLOW) ? ((cmd.x > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.x;
                     }
-                    else if(std::abs(xcmd) < SPEED_FAST * 2 || std::abs(pos.x - xStart) < SPEED_FAST * 2){
-                        xcmd = xcmd > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
+                    else if(std::abs(cmd.x) < SPEED_FAST * 2 || std::abs(pos.x) < SPEED_FAST * 2){
+                        cmd.x = cmd.x > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
                     }
-                    else if(std::abs(xcmd) < DISTANCE_SLOWER || std::abs(pos.x - xStart) < DISTANCE_SLOWER){
-                        xcmd = xcmd > 0 ? SPEED_FAST : SPEED_FAST * -1;
+                    else if(std::abs(cmd.x) < DISTANCE_SLOWER || std::abs(pos.x) < DISTANCE_SLOWER){
+                        cmd.x = cmd.x > 0 ? SPEED_FAST : SPEED_FAST * -1;
                     }
                     else{
-                        xcmd = xcmd > 0 ? SPEED_MAX : SPEED_MAX * -1;
+                        cmd.x = cmd.x > 0 ? SPEED_MAX : SPEED_MAX * -1;
                     }
                     
-                    if(std::abs(ycmd) < SPEED_MIDDLE * 1.5 || std::abs(pos.y - yStart) < SPEED_MIDDLE * 1.5){
-                        ycmd = (std::abs(ycmd) >= SPEED_SLOW) ? ((ycmd > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : ycmd;
+                    if(std::abs(cmd.y) < SPEED_MIDDLE * 1.5 || std::abs(pos.y) < SPEED_MIDDLE * 1.5){
+                        cmd.y = (std::abs(cmd.y) >= SPEED_SLOW) ? ((cmd.y > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.y;
                     }
-                    else if(std::abs(ycmd) < SPEED_FAST * 2 || std::abs(pos.y - yStart) < SPEED_FAST * 2){
-                        ycmd = ycmd > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
+                    else if(std::abs(cmd.y) < SPEED_FAST * 2 || std::abs(pos.y) < SPEED_FAST * 2){
+                        cmd.y = cmd.y > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
                     }
-                    else if(std::abs(ycmd) < DISTANCE_SLOWER || std::abs(pos.y - yStart) < DISTANCE_SLOWER){
-                        ycmd = ycmd > 0 ? SPEED_FAST : SPEED_FAST * -1;
+                    else if(std::abs(cmd.y) < DISTANCE_SLOWER || std::abs(pos.y) < DISTANCE_SLOWER){
+                        cmd.y = cmd.y > 0 ? SPEED_FAST : SPEED_FAST * -1;
                     }
                     else{
-                        ycmd = ycmd > 0 ? SPEED_MAX : SPEED_MAX * -1;
+                        cmd.y = cmd.y > 0 ? SPEED_MAX : SPEED_MAX * -1;
                     }
 
                     sensor_msgs::Joy controlVelYawRate;
 
-                    controlVelYawRate.axes.push_back(xcmd);
-                    controlVelYawRate.axes.push_back(ycmd);
-                    controlVelYawRate.axes.push_back(zcmd);
+                    controlVelYawRate.axes.push_back(cmd.x);
+                    controlVelYawRate.axes.push_back(cmd.y);
+                    controlVelYawRate.axes.push_back(cmd.z);
                     controlVelYawRate.axes.push_back(rTarget);
                     controlVelYawRate.axes.push_back(flag);
                     drone_ctrl_pos_yaw_pub.publish(controlVelYawRate);
 
-                    if(std::abs(xcmd) < HORIZON_THRESHOLD && std::abs(ycmd) < HORIZON_THRESHOLD && std::abs(zcmd) < VERTICAL_THRESHOLD && std::abs(getRotation().z - rTarget) < YAW_THRESHOLD){
+                    if(std::abs(cmd.x) < HORIZON_THRESHOLD && std::abs(cmd.y) < HORIZON_THRESHOLD && std::abs(cmd.z) < VERTICAL_THRESHOLD && std::abs(getRotation().z - rTarget) < YAW_THRESHOLD){
                         
                         // ROS_INFO_STREAM("counter: " <<(int) counter);
                         if(counter < 50){
@@ -512,16 +530,14 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
         counter = 0;
 
         fail_counter_nm = 0;
-        fail_pos = getPos();
 
-        xStart = fail_pos.x;
-        yStart = fail_pos.y;
+        startGPS = getGPS();
 
-        lastx = 0;
-        lasty = 0;
-        lastz = 0;
+        lastPos.x = 0;
+        lastPos.y = 0;
+        lastPos.z = 0;
 
-        flag = (DJISDK::VERTICAL_VELOCITY   |
+        flag = (DJISDK::VERTICAL_POSITION   |
                 DJISDK::HORIZONTAL_VELOCITY |
                 DJISDK::YAW_ANGLE           |
                 DJISDK::HORIZONTAL_GROUND   |
@@ -529,20 +545,21 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
 
         if(relative_ground){
             rTarget = headless ? getRotation().z : getDirectionAngle(x, y);
-            xTarget = fail_pos.x + x;
-            yTarget = fail_pos.y + y;
-            zTarget = fail_pos.z + z;
+            Target.x = x;
+            Target.y = y;
+            Target.z = (getGPS().altitude - home_altitude) + z;
         }
         else{
             rTarget = headless ? getRotation().z : getRotation().z + getDirectionAngle(x, y);
-            ROS_WARN_STREAM("KILL ME x: " << x << "\ty:" << y);
             std::pair<float, float> tmp = remapDirections(x, y, getRotation().z);
-            ROS_WARN_STREAM("whyyyy");
-            ROS_WARN_STREAM("x: " << x << "\t" << tmp.first);
-            ROS_WARN_STREAM("y:" << y << "\t" << tmp.second);
-            xTarget = fail_pos.x + tmp.first;
-            yTarget = fail_pos.y + tmp.second;
-            zTarget = fail_pos.z + z;
+
+            // ROS_WARN_STREAM("whyyyy");
+            // ROS_WARN_STREAM("x: " << x << "\t" << tmp.first);
+            // ROS_WARN_STREAM("y:" << y << "\t" << tmp.second);
+
+            Target.x = tmp.first;
+            Target.y = tmp.second;
+            Target.z = (getGPS().altitude - home_altitude) + z;
         }
         
         if(!gotCtrlAuthority){
@@ -566,6 +583,11 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
         start_time = ros::Time::now();
         start_move_time = ros::Time::now();
     }
+}
+
+void ControlleDrone::StartMoveDrone(sensor_msgs::NavSatFix dest, bool headless){
+    geometry_msgs::Point tmp = translateGPS(getGPS(), dest);
+    StartMoveDrone(tmp.x, tmp.y, 0, headless, true);
 }
 
 void ControlleDrone::StartRotate(float ofset, bool relative_current_rot){
@@ -645,10 +667,10 @@ float ControlleDrone::getDirectionAngle(float x, float y){
         return getRotation().z;
     }
     else if(x == 0){
-        return (y > 0) ? (PI / 2) : (-PI / 2); 
+        return (y > 0) ? (M_PI / 2) : (-M_PI / 2); 
     }
     else if(y == 0){
-        return (x > 0) ? 0 : PI;
+        return (x > 0) ? 0 : M_PI;
     }
     else{
         float angle = std::abs(atan(y/x));
@@ -656,13 +678,13 @@ float ControlleDrone::getDirectionAngle(float x, float y){
             return angle;
         }
         else if(x < 0 && y > 0){
-            return PI - angle;
+            return M_PI - angle;
         }
         else if(x > 0 && y < 0){
             return angle * -1;
         }
         else if(x < 0 && y < 0){
-            return -PI + angle;
+            return -M_PI + angle;
         }
         else{
             ROS_ERROR_STREAM("What dit just happen????");
@@ -697,6 +719,26 @@ std::pair<float, float> ControlleDrone::remapDirections(float x, float y, float 
     }
 }
 
+geometry_msgs::Point ControlleDrone::translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset){
+    origin.longitude = origin.longitude * M_PI / 180;
+    origin.latitude = origin.latitude * M_PI / 180;
+    offset.longitude = offset.longitude * M_PI / 180;
+    offset.latitude = offset.latitude * M_PI / 180;
+
+    long double distance = RADIUS_EARTH * acos((sin(origin.latitude) * sin(offset.latitude)) + (cos(origin.latitude) * cos(offset.latitude) * cos(origin.longitude - offset.longitude)));
+
+    long double phi = cos(origin.latitude) * sin(offset.latitude) - sin(origin.latitude) * cos(offset.latitude) * cos(offset.longitude - origin.longitude);
+    long double lon = sin(offset.longitude - origin.longitude) * cos(offset.latitude);
+    long double heading = atan2(lon, phi);
+    
+    geometry_msgs::Point tmp;
+    tmp.x = sin(heading) * distance;
+    tmp.y = cos(heading) * distance;
+    tmp.z = offset.altitude - home_altitude;
+
+    return tmp;
+}
+
 ParrentDroneClass::ServiceAck ControlleDrone::obtainCtrlAuthority(){
   dji_sdk::SDKControlAuthority sdkAuthority;
   sdkAuthority.request.control_enable = 1;
@@ -720,7 +762,13 @@ ParrentDroneClass::ServiceAck ControlleDrone::releaseControle(){
 }
 
 bool ControlleDrone::takeoff(){
-    float home_altitude = getGPS().altitude;
+    if (!set_local_position()) // We need this for height
+    {
+        ROS_ERROR("GPS health insufficient - No local frame reference for height. Exiting.");
+        return false;
+    }
+
+    home_altitude = getGPS().altitude;
     
     uint8_t count = 0;
     while(count != 12){
@@ -752,7 +800,7 @@ bool ControlleDrone::takeoff(){
         return false;
     }
 
-    if(getFlightStatus() != DJISDK::M100FlightStatus::M100_STATUS_IN_AIR || getGPS().altitude - home_altitude < 1.0){
+    if(getFlightStatus() != DJISDK::M100FlightStatus::M100_STATUS_IN_AIR || getGPS().altitude - home_altitude < 0.75){
         ROS_ERROR_STREAM("Takeoff failed");
         return false;
     }

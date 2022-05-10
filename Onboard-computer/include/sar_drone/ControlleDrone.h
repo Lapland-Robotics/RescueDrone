@@ -50,27 +50,37 @@ namespace SaR_Drone{
         };
 
         void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground);
+        void StartMoveDrone(sensor_msgs::NavSatFix dest, bool headless);
         void StartRotate(float ofset, bool relative_current_rot); 
-
         void StopMoving();
+        void AbsolutHeight(float z);
 
         float getDirectionAngle(float x, float y);
         std::pair<float, float> remapDirections(float x, float y, float r);
-
-        bool flying;
-        bool landing;
-        bool gotCtrlAuthority;
+        geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset);
 
         ServiceAck obtainCtrlAuthority();
         ServiceAck releaseControle();
         
         bool takeoff();
         bool land();
-
         bool takeoff_land(int task);
+
+        bool set_local_position()
+        {
+            dji_sdk::SetLocalPosRef localPosReferenceSetter;
+            set_local_pos_reference.call(localPosReferenceSetter);
+            return localPosReferenceSetter.response.result;
+        }
+
+        bool flying;
+        bool landing;
+        bool gotCtrlAuthority;
+        float home_altitude;
 
         ros::ServiceClient drone_task_service;
         ros::ServiceClient sdk_ctrl_authority_service;
+        ros::ServiceClient set_local_pos_reference;
 
         ros::Subscriber drone_commands_sub;
         ros::Subscriber drone_PRIO_commands_sub;
@@ -89,11 +99,12 @@ namespace SaR_Drone{
 
         uint8_t fail_counter_nm;
         uint8_t fail_counter_OOB;
-        geometry_msgs::Point fail_pos;
+        sensor_msgs::NavSatFix startGPS;
 
-        float xTarget, yTarget, zTarget, rTarget;
-        float xStart, yStart;
-        float lastx, lasty, lastz;
+        geometry_msgs::Point Target;
+        geometry_msgs::Point lastPos;
+
+        float rTarget;
 
         uint8_t flag;
 

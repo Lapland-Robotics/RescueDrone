@@ -25,8 +25,8 @@ import signal
 # StartIR = 0 #Bodytemp detection starts now
 BodytempD = 110 #bodytemp detected
 BodyTempND = 111 #bodytemp not detected
-#BodyTempDS = 111 #bodytemp detection succeeded
-HumanDs = 4 #human detection starts
+BodyTempDS = 125 #bodytemp detection succeeded
+#HumanDs = 4 #human detection starts
 HumanBL = 119 #Human (framed in) bottom left
 HumanBC = 114 #Human (framed in) bottom center
 HumanBR = 220 #Human (framed in) bottom right
@@ -246,7 +246,7 @@ def ircam():
             #cv2.waitKey(1)
               
             if (counterC >= 100):
-              #talker(BodyTempDS) #bodytemp detection succeeded
+              talkerPRIO(BodyTempDS) #bodytemp detection succeeded
               AI()
               if AIDone and not personDetected:
                 x = 0
