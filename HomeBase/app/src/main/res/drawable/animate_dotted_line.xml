@@ -1,0 +1,70 @@
+<animated-vector
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/dotted_line">
+    <target android:name="dash_1">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillColor"
+                android:duration="100"
+                android:startOffset="100"
+                android:valueFrom="@color/dash_invisible"
+                android:valueTo="@color/dash_visible"
+                android:valueType="colorType"
+                android:interpolator="@android:anim/linear_interpolator"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dash_2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillColor"
+                android:duration="100"
+                android:startOffset="300"
+                android:valueFrom="@color/dash_invisible"
+                android:valueTo="@color/dash_visible"
+                android:valueType="colorType"
+                android:interpolator="@android:anim/linear_interpolator"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dash_3">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillColor"
+                android:duration="100"
+                android:startOffset="500"
+                android:valueFrom="@color/dash_invisible"
+                android:valueTo="@color/dash_visible"
+                android:valueType="colorType"
+                android:interpolator="@android:anim/linear_interpolator"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dash_4">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillColor"
+                android:duration="100"
+                android:startOffset="700"
+                android:valueFrom="@color/dash_invisible"
+                android:valueTo="@color/dash_visible"
+                android:valueType="colorType"
+                android:interpolator="@android:anim/linear_interpolator"/>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dash_5">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="fillColor"
+                android:duration="100"
+                android:startOffset="900"
+                android:valueFrom="@color/dash_invisible"
+                android:valueTo="@color/dash_visible"
+                android:valueType="colorType"
+                android:interpolator="@android:anim/linear_interpolator"/>
+        </aapt:attr>
+    </target>
+
+</animated-vector>

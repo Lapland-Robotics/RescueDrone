@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".startPage">
+
+    <TextView
+        android:id="@+id/Act_start_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="24dp"
+        android:text="@string/Title"
+        android:textAlignment="center"
+        android:textColor="@color/colorPrimary"
+        android:textSize="35sp" />
+
+    <Button
+        android:id="@+id/act_start_continue"
+        style="@style/common_button"
+        android:layout_width="200dp"
+        android:layout_height="80dp"
+        android:layout_below="@id/Act_start_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:textSize="25sp"
+        android:text="@string/button_Start" />
+
+    <ImageView
+        android:id="@+id/connection_img_cellphone"
+        android:layout_width="50dp"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="75dp"
+        android:layout_marginBottom="25dp"
+        android:src="@drawable/gsm_icon" />
+
+    <ImageView
+        android:id="@+id/connection_img_controller"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="-75dp"
+        android:layout_marginBottom="25dp"
+        android:layout_toStartOf="@id/connection_center"
+        android:src="@drawable/controller_icon_w" />
+
+    <ImageView
+        android:id="@+id/connection_img_drone"
+        android:layout_width="200dp"
+        android:layout_height="150dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="25dp"
+        android:layout_marginBottom="25dp"
+        android:src="@drawable/drone_icon_w" />
+
+    <Space
+        android:id="@+id/connection_center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"/>
+
+    <ImageView
+        android:id="@+id/connection_img_dot1"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:layout_marginBottom="65dp"
+        android:layout_toStartOf="@+id/connection_img_controller"
+        android:layout_toEndOf="@id/connection_img_cellphone"
+        android:src="@drawable/animate_dotted_line" />
+
+    <ImageView
+        android:id="@+id/connection_img_dot2"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="80dp"
+        android:layout_marginEnd="-50dp"
+        android:layout_marginBottom="65dp"
+        android:layout_toStartOf="@+id/connection_img_drone"
+        android:layout_toEndOf="@id/connection_img_controller"
+        android:src="@drawable/animate_dotted_line" />
+
+
+</RelativeLayout>

@@ -24,6 +24,9 @@
     <string name="button_start_search">Start Searching</string>
     <string name="button_force_stop">Stop Searching</string>
     <string name="button_start_coordinates">Start Coordinates</string>
+    <string name="button_Start">Start</string>
+    <string name="button_send_area">Send area</string>
+    <string name="button_remove_area">Remove area</string>
 
     <!-- Activity Strings -->
     <string name="sdk_version">DJI SDK Version: %1$s</string>
@@ -34,6 +37,8 @@
 
     <!-- placeholders -->
     <string name="unknown">Unknown</string>
+
+    <!-- preference values-->
 
     <!-- <string name="disconnected">Disconnected</string> -->
 

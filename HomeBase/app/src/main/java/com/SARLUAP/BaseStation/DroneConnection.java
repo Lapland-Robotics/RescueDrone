@@ -3,22 +3,16 @@ package com.sarLuap.baseStation;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import androidx.core.content.ContextCompat;
-import android.util.Log;
-import android.widget.Toast;
 
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
 import dji.sdk.base.BaseComponent;
 import dji.sdk.base.BaseProduct;
-import dji.sdk.camera.Camera;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.products.Aircraft;
-import dji.sdk.products.HandHeld;
 import dji.sdk.remotecontroller.RemoteController;
 import dji.sdk.sdkmanager.DJISDKInitEvent;
 import dji.sdk.sdkmanager.DJISDKManager;
@@ -28,6 +22,8 @@ public class DroneConnection extends Application {
 
     private static BaseProduct mProduct;
     private static BaseComponent mComponent;
+    private static boolean started;
+
     public Handler mHandler;
 
     private Application instance;
@@ -41,12 +37,16 @@ public class DroneConnection extends Application {
         return instance;
     }
 
-    public DroneConnection() {
-
-    }
-
     private static boolean isAircraftConnected() {
         return getProductInstance() != null && getProductInstance() instanceof Aircraft;
+    }
+
+    public static boolean isControllerConnected(){
+        return getRemoteConInstance() != null && getRemoteConInstance().isConnected();
+    }
+
+    public static boolean isDroneConnected(){
+        return getProductInstance() != null && getProductInstance().isConnected();
     }
 
     private static synchronized Aircraft getAircraftInstance() {
@@ -61,7 +61,7 @@ public class DroneConnection extends Application {
      * If no product is connected, it returns null.
      */
     public static synchronized BaseProduct getProductInstance() {
-        if (null == mProduct) {
+        if (null == mProduct && started) {
             mProduct = DJISDKManager.getInstance().getProduct();
         }
         return mProduct;
@@ -96,6 +96,7 @@ public class DroneConnection extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        started = false;
         mHandler = new Handler(Looper.getMainLooper());
 
         /**
@@ -113,7 +114,7 @@ public class DroneConnection extends Application {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(getApplicationContext(), "SDK register success", Toast.LENGTH_SHORT).show();
+                            started = true;
                         }
                     });
                     DJISDKManager.getInstance().startConnectionToProduct();
@@ -121,7 +122,6 @@ public class DroneConnection extends Application {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(getApplicationContext(), "SDK register fail", Toast.LENGTH_LONG).show();
                         }
                     });
 
@@ -172,10 +172,10 @@ public class DroneConnection extends Application {
         if (permissionCheck == 0 && permissionCheck2 == 0) {
             //This is used to start SDK services and initiate SDK.
             DJISDKManager.getInstance().registerApp(getApplicationContext(), mDJISDKManagerCallback);
-            Toast.makeText(getApplicationContext(), "registering, pls wait...", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(getApplicationContext(), "registering, pls wait...", Toast.LENGTH_SHORT).show();
 
         } else {
-            Toast.makeText(getApplicationContext(), "Please check if the permission is granted.", Toast.LENGTH_LONG).show();
+//            Toast.makeText(getApplicationContext(), "Please check if the permission is granted.", Toast.LENGTH_LONG).show();
         }
 
     }
@@ -185,12 +185,8 @@ public class DroneConnection extends Application {
         mHandler.postDelayed(updateRunnable, 500);
     }
 
-    private Runnable updateRunnable = new Runnable() {
-
-        @Override
-        public void run() {
-            Intent intent = new Intent(FLAG_CONNECTION_CHANGE);
-            getApplicationContext().sendBroadcast(intent);
-        }
+    private Runnable updateRunnable = () -> {
+        Intent intent = new Intent(FLAG_CONNECTION_CHANGE);
+        getApplicationContext().sendBroadcast(intent);
     };
 }
