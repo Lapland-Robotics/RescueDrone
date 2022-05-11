@@ -6,10 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import android.os.Handler
-import android.os.Looper
 import android.widget.Button
-import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import com.mapbox.android.gestures.MoveGestureDetector
@@ -19,22 +16,25 @@ import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.image.image
+import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.generated.SymbolLayer
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.layers.getLayerAs
 import com.mapbox.maps.extension.style.layers.properties.generated.IconRotationAlignment
+import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
 import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.extension.style.style
 import com.mapbox.maps.plugin.LocationPuck2D
-import com.mapbox.maps.plugin.compass.CompassViewImpl
 import com.mapbox.maps.plugin.compass.compass
+import com.mapbox.maps.plugin.gestures.OnMapLongClickListener
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
+
 
 class LiveMapClass {
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
@@ -45,6 +45,11 @@ class LiveMapClass {
         mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(it).build())
         mapView.gestures.focalPoint = mapView.getMapboxMap().pixelForCoordinate(it)
     }
+
+    private val onMapLongClickListener = OnMapLongClickListener { point ->
+            updateCorner(point.longitude(), point.latitude())
+            false
+        }
 
     private val onMoveListener = object : OnMoveListener {
         override fun onMoveBegin(detector: MoveGestureDetector) {
@@ -61,6 +66,7 @@ class LiveMapClass {
     private lateinit var liveMapActivityIntern: LiveMapActivity
     private lateinit var mapView: MapView
     private lateinit var btnTrack: Button
+    private var counter: Int = 0
 
     private var posTrackingON: Boolean = false
 
@@ -71,6 +77,7 @@ class LiveMapClass {
     //public fun
     @SuppressLint("SetTextI18n")
     fun mapInit(liveMapActivityTmp: LiveMapActivity, mapViewTmp: MapView, trackingButton: Button ) {
+        counter = 0
         liveMapActivityIntern = liveMapActivityTmp
         mapView = mapViewTmp
         btnTrack = trackingButton
@@ -99,6 +106,21 @@ class LiveMapClass {
                     iconOpacity(0.0)
                 }
 
+                +image(CORNER){
+                    bitmapFromDrawableRes(liveMapActivityIntern, R.drawable.ic_map_corner_point)?.let {
+                        bitmap(it)
+                    }
+                }
+//                +geoJsonSource(SOURCE_CUL){
+//                    geometry(Point.fromLngLat(LONGITUDE, LATITUDE))
+//                }
+//
+//                +symbolLayer(LAYER_CUL, SOURCE_CUL){
+//                    iconImage(CORNER_UL)
+//                    iconSize(0.02)
+//                    iconOpacity(1.0)
+//                }
+
             }
         ) {
             initLocationComponent()
@@ -110,6 +132,8 @@ class LiveMapClass {
         }
 
         Style.OnStyleLoaded { mapView.compass.updateSettings { enabled = true; fadeWhenFacingNorth = false; clickable = true } }
+
+
 
         posTrackingON = false
         btnTrack.text = "" + liveMapActivityIntern.getText(R.string.button_position_tracking) + " OFF"
@@ -124,7 +148,34 @@ class LiveMapClass {
             source?.geometry(Point.fromLngLat(if(show) long else LONGITUDE, if(show) lat else LATITUDE))
             layer?.iconRotate(rot)
             layer?.iconOpacity(if(show) 1.0 else 0.0)
+
         }
+    }
+
+    private fun updateCorner(long: Double, lat: Double){
+        mapView.getMapboxMap().getStyle(){ style ->
+            val layer = style.getLayerAs<SymbolLayer>(LAYER_CORNER + counter.toString())
+            val source = style
+
+            style.addSource(geoJsonSource(SOURCE_CORNER + counter.toString()).geometry(Point.fromLngLat(long, lat)))
+            style.addLayer(symbolLayer(LAYER_CORNER + counter.toString(),SOURCE_CORNER + counter.toString()){
+                iconImage(CORNER)
+                iconSize(0.05)
+                iconOpacity(1.0)
+                iconAllowOverlap(true)
+            })
+        }
+        counter ++
+    }
+
+    fun removePoints(){
+        mapView.getMapboxMap().getStyle(){ style ->
+            for (i in 0 until counter){
+                style.removeStyleLayer(LAYER_CORNER + i.toString())
+                style.removeStyleSource(SOURCE_CORNER + i.toString())
+            }
+        }
+        counter = 0;
     }
 
     @SuppressLint("SetTextI18n")
@@ -138,7 +189,7 @@ class LiveMapClass {
     }
 
     @SuppressLint("SetTextI18n")
-    fun activateCameraTrakingActivate(){
+    fun activateCameraTrackingActivate(){
         mapView.location.addOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
         mapView.location.addOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
         mapView.gestures.addOnMoveListener(onMoveListener)
@@ -151,11 +202,13 @@ class LiveMapClass {
         mapView.location.removeOnIndicatorBearingChangedListener(onIndicatorBearingChangedListener)
         mapView.location.removeOnIndicatorPositionChangedListener(onIndicatorPositionChangedListener)
         mapView.gestures.removeOnMoveListener(onMoveListener)
+        mapView.gestures.removeOnMapLongClickListener(onMapLongClickListener)
     }
 
     //private fun
     private fun setupGesturesListener() {
         mapView.gestures.addOnMoveListener(onMoveListener)
+        mapView.gestures.addOnMapLongClickListener(onMapLongClickListener)
     }
 
     private fun initLocationComponent() {
@@ -199,9 +252,11 @@ class LiveMapClass {
         if (sourceDrawable == null) {
             return null
         }
+
         return if (sourceDrawable is BitmapDrawable) {
             sourceDrawable.bitmap
-        } else {
+        }
+        else {
             // copying drawable object to not manipulate on the same reference
             val constantState = sourceDrawable.constantState ?: return null
             val drawable = constantState.newDrawable().mutate()
@@ -216,14 +271,11 @@ class LiveMapClass {
         }
     }
 
-    private fun showToast(toastMsg: String) {
-        val handler = Handler(Looper.getMainLooper())
-        handler.post {
-            Toast.makeText(liveMapActivityIntern, toastMsg, Toast.LENGTH_SHORT).show()
-        }
-    }
-
     companion object {
+        private const val CORNER = "corner"
+        private const val SOURCE_CORNER = "source_corner"
+        private const val LAYER_CORNER = "layer_corner"
+
         private const val DRONE = "drone"
         private const val SOURCE_DRONE = "source_drone"
         private const val LAYER_DRONE = "layer_drone"

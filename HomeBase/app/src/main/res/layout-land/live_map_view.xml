@@ -16,6 +16,7 @@
     <Button
         android:id="@+id/btn_back"
         style="@style/common_button"
+        android:layout_width="100dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="5dp"
         android:text="@string/button_back" />
@@ -33,6 +34,7 @@
     <Button
         android:id="@+id/btn_start_search"
         style="@style/common_button"
+        android:layout_width="100dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="5dp"
         android:layout_toEndOf="@+id/btn_position_tracking"
@@ -59,7 +61,7 @@
     <TextView
         android:id="@+id/tv_drone_battery_information"
         android:layout_width="100dp"
-        android:layout_height="45dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         android:layout_toEndOf="@+id/btn_start_coordinates"
         android:layout_marginTop="5dp"
@@ -70,8 +72,8 @@
 
     <TextView
         android:id="@+id/tv_controller_battery_information"
-        android:layout_width="125dp"
-        android:layout_height="45dp"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
         android:layout_toEndOf="@+id/tv_drone_battery_information"
         android:layout_marginTop="5dp"
@@ -79,4 +81,24 @@
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="17sp" />
+
+    <Button
+        android:id="@+id/btn_send_area"
+        style="@style/common_button"
+        android:layout_width="100dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/btn_start_search"
+        android:layout_alignStart="@id/tv_drone_battery_information"
+        android:text="@string/button_send_area" />
+
+    <Button
+        android:id="@+id/btn_remove_area"
+        style="@style/common_button"
+        android:layout_width="100dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginTop="5dp"
+        android:layout_below="@+id/btn_force_Stop"
+        android:layout_alignStart="@id/tv_controller_battery_information"
+        android:text="@string/button_remove_area" />
 </RelativeLayout>

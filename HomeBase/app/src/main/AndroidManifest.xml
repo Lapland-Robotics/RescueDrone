@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.sarLuap.baseStation">
-
     <!-- Permissions and features -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -15,9 +14,11 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
+    <uses-permission
+        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
         tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -34,41 +35,38 @@
     <application
         android:name=".MApplication"
         android:allowBackup="true"
+        android:extractNativeLibs="true"
         android:icon="@mipmap/ic_base_app"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_base_app_round"
         android:supportsRtl="true"
-        android:extractNativeLibs="true"
         android:theme="@style/AppTheme">
 
-        <uses-library android:name="org.apache.http.legacy" android:required="false" />
-
-        <!-- DJI SDK -->
-        <uses-library android:name="com.android.future.usb.accessory"/>
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" /> <!-- DJI SDK -->
+        <uses-library android:name="com.android.future.usb.accessory" />
 
         <meta-data
             android:name="com.dji.sdk.API_KEY"
-            android:value= "@string/DJIAPI" />
+            android:value="@string/DJIAPI" />
 
-        <service android:name="dji.sdk.sdkmanager.DJIGlobalService"
-            tools:ignore="Instantiatable">
-        </service>
+        <service
+            android:name="dji.sdk.sdkmanager.DJIGlobalService"
+            tools:ignore="Instantiatable" />
         <!-- DJI SDK -->
 
         <activity
-            android:name=".ActivateApp"
-            android:configChanges="orientation"
-            android:screenOrientation="landscape">
-
+            android:name=".startPage"
+            android:screenOrientation="landscape"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED" />
             </intent-filter>
-
             <meta-data
                 android:name="android.hardware.usb.action.USB_ACCESSORY_ATTACHED"
                 android:resource="@xml/accessory_filter" />
@@ -77,7 +75,6 @@
         <activity
             android:name=".MainActivity"
             android:screenOrientation="landscape" />
-
         <activity
             android:name=".LiveMapActivity"
             android:screenOrientation="landscape" />

@@ -18,6 +18,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.Serializable;
 import java.util.List;
@@ -32,7 +33,7 @@ import dji.sdk.battery.Battery;
 import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.remotecontroller.RemoteController;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getName();
 
     private boolean gps;
@@ -47,10 +48,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     protected TextView productTV;
     protected TextView droneBatteryTV;
     protected TextView conBatteryTV;
-    protected TextView gpsTV;
 
     protected Button btnBack;
-    protected Button btnEscBeep;
     protected Button btnMap;
 
     @Override
@@ -94,13 +93,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
         productTV = (TextView) findViewById(R.id.tv_product_information);
         droneBatteryTV = (TextView) findViewById(R.id.tv_drone_battery_information);
         conBatteryTV = (TextView) findViewById(R.id.tv_controller_battery_information);
-        gpsTV = (TextView) findViewById(R.id.tv_gps_information);
 
-        btnEscBeep = (Button) findViewById(R.id.btn_ESCBeep);
         btnBack = (Button) findViewById(R.id.btn_back);
         btnMap = (Button) findViewById(R.id.btn_map);
 
-        btnEscBeep.setOnClickListener(this);
         btnBack.setOnClickListener(this);
         btnMap.setOnClickListener(this);
 
@@ -159,10 +155,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         byte[] sendData = {(byte) 0x02};
                         mFlightCon.sendDataToOnboardSDKDevice(sendData, djiError -> {
                             if(djiError != null){
-                                showToast(djiError.getDescription());
+                                CustomFun.showToast(djiError.getDescription(), getApplicationContext());
                             }
                         });
-                        showToast("manual override");
+                        CustomFun.showToast("manual override", getApplicationContext());
                         inSearch = false;
                     }
                 }
@@ -170,10 +166,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
         else {
             conBatteryTV.setText(R.string.connection_controller_loose);
-        }
-
-        if(!gps){
-            gpsTV.setText(R.string.gps_disables);
         }
     }
 
@@ -184,10 +176,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
             case R.id.btn_back: {
                 finish();
-                break;
-            }
-
-            case R.id.btn_ESCBeep: {
                 break;
             }
 
@@ -202,16 +190,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
             default:
                 break;
         }
-    }
-
-    private void showToast(final String toastMsg) {
-
-        Handler handler = new Handler(Looper.getMainLooper());
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(getApplicationContext(), toastMsg, Toast.LENGTH_LONG).show();
-            }
-        });
     }
 }
