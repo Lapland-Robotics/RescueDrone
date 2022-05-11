@@ -13,10 +13,11 @@
 #define SPEED_MIDDLE 2.0
 #define SPEED_SLOW 1.0
 
-#define PI 3.14159265
+#define RADIUS_EARTH 6372795.477598
+
 #define HORIZON_THRESHOLD 0.5
 #define VERTICAL_THRESHOLD 0.1
-#define YAW_THRESHOLD (0.025 * PI)
+#define YAW_THRESHOLD (0.025 * M_PI)
 
 #define HD_MOVE 1.0
 
@@ -64,6 +65,7 @@ namespace SaR_Drone{
         HD_DOWN = 122,
         HD_TURN_LEFT = 123,
         HD_TURN_RIGHT = 124,
+        HD_START_AI = 125,
 
         ARE_YOU_ALIVE = 200,
     };
