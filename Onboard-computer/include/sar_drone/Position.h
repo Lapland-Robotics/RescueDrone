@@ -33,9 +33,17 @@ namespace SaR_Drone{
 
             tf::Matrix3x3 R_FLU2ENU(tf::Quaternion(current_atti.x, current_atti.y, current_atti.z, current_atti.w));
             R_FLU2ENU.getRPY(ans.x, ans.y, ans.z);
+            ans.z = angleabs(ans.z);
             return ans;}
         geometry_msgs::Point getPos(){return current_local_pos;}
         uint8_t getFlightStatus(){return flight_status;}
+        
+        double angleabs(double angle){
+            if(std::abs(angle + M_PI) < YAW_THRESHOLD){
+                angle += (2 * M_PI);
+            }
+            return angle;
+        }
 
     private:
         bool set_local_position();

@@ -15,7 +15,6 @@ ControlleDrone::ControlleDrone(){
 
         drone_task_service = nh.serviceClient<dji_sdk::DroneTaskControl>("dji_sdk/drone_task_control");
         sdk_ctrl_authority_service = nh.serviceClient<dji_sdk::SDKControlAuthority>("dji_sdk/sdk_control_authority");
-        set_local_pos_reference    = nh.serviceClient<dji_sdk::SetLocalPosRef> ("dji_sdk/set_local_pos_ref");
 
         drone_commands_sub = nh.subscribe(DIRECTIONS_TOPPIC, 50, &ControlleDrone::directionsCallback, this);
         drone_PRIO_commands_sub = nh_PRIO.subscribe(DIRECTIONS_PRIO_TOPPIC, 50, &ControlleDrone::directionsPRIOCallback, this);
@@ -254,7 +253,8 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
         }
 
         case HD_START_AI:{
-            
+            ROS_WARN_STREAM("Go to AI position");
+            StartMoveDrone(-2, 0, 3, true, false, false);
         }
 
         default:
@@ -323,13 +323,13 @@ void ControlleDrone::step(double sleepTime){
 
                     cmd.x = Target.x - pos.x;
                     cmd.y = Target.y - pos.y;
-                    cmd.z = Target.z - pos.z;
+                    cmd.z = Target.z;
 
                     if(elapsed_move_time > ros::Duration(1.0)){
-                        //ROS_INFO_STREAM("\nx: " << cmd.x << "\t" << pos.x << "\ny: " << cmd.y << "\t" << pos.y << "\nz: " << cmd.z << "\t" << pos.z << "\nr: " << getRotation().z);
+                        // ROS_DEBUG_STREAM("\nx: " << cmd.x << "\t" << pos.x << "\ny: " << cmd.y << "\t" << pos.y << "\nz: " << cmd.z << "\t" << pos.z  << "\t" << pos.z - Target.z << "\nr: " << getRotation().z << "\t" << rTarget);
                         start_move_time = ros::Time::now();
                         if((std::abs(pos.x - lastPos.x) < 0.2) && (std::abs(pos.y - lastPos.y) < 0.2) && (std::abs(pos.z - lastPos.z) < 0.1)){
-                            ROS_WARN_STREAM("drone stoped moving to early \n\tx: " << pos.x << " - " << lastPos.x << " = " << pos.x - lastPos.x << "\n\tx: " << pos.y << " - " << lastPos.y << " = " << pos.y - lastPos.y << "\n\tx: " << pos.z << " - " << lastPos.z << " = " << pos.z - lastPos.z );
+                            ROS_WARN_STREAM("drone stoped moving to early \n\tx: " << pos.x << " - " << lastPos.x << " = " << pos.x - lastPos.x << "\n\ty: " << pos.y << " - " << lastPos.y << " = " << pos.y - lastPos.y << "\n\tz: " << pos.z << " - " << lastPos.z << " = " << pos.z - lastPos.z );
                             if (fail_counter_nm < 5){
                                 fail_counter_nm ++;
                             }
@@ -344,7 +344,7 @@ void ControlleDrone::step(double sleepTime){
                         } 
 
                         if((std::abs(pos.x - Target.x) > std::abs(cmd.x) + 2) || (std::abs(pos.y - Target.y) > std::abs(cmd.y) + 2) || (std::abs(pos.z - Target.z) > std::abs(cmd.z) + 1)){
-                            ROS_WARN_STREAM("drone not on route \n\tx: " << pos.x << " - " << Target.x << " = " << std::abs(pos.x - Target.x) << " > " <<  std::abs(cmd.x) + 2 << "\n\tx: " << pos.y << " - " << Target.y << " = " << std::abs(pos.y - Target.y) << " > " <<  std::abs(cmd.y) + 2 << "\n\tx: " << pos.z << " - " << Target.z << " = " << std::abs(pos.z - Target.z) << " > " << std::abs(cmd.z) + 1 );
+                            ROS_WARN_STREAM("drone not on route \n\tx: " << pos.x << " - " << Target.x << " = " << std::abs(pos.x - Target.x) << " > " <<  std::abs(cmd.x) + 2 << "\n\ty: " << pos.y << " - " << Target.y << " = " << std::abs(pos.y - Target.y) << " > " <<  std::abs(cmd.y) + 2 << "\n\tz: " << pos.z << " - " << Target.z << " = " << std::abs(pos.z - Target.z) << " > " << std::abs(cmd.z) + 1 );
                             if (fail_counter_OOB < 5){
                                 fail_counter_OOB ++;
                             }
@@ -397,7 +397,7 @@ void ControlleDrone::step(double sleepTime){
                     controlVelYawRate.axes.push_back(flag);
                     drone_ctrl_pos_yaw_pub.publish(controlVelYawRate);
 
-                    if(std::abs(cmd.x) < HORIZON_THRESHOLD && std::abs(cmd.y) < HORIZON_THRESHOLD && std::abs(cmd.z) < VERTICAL_THRESHOLD && std::abs(getRotation().z - rTarget) < YAW_THRESHOLD){
+                    if(std::abs(cmd.x) < HORIZON_THRESHOLD && std::abs(cmd.y) < HORIZON_THRESHOLD && std::abs(pos.z - Target.z) < VERTICAL_THRESHOLD && std::abs(getRotation().z - rTarget) < YAW_THRESHOLD){
                         
                         // ROS_INFO_STREAM("counter: " <<(int) counter);
                         if(counter < 50){
@@ -407,6 +407,8 @@ void ControlleDrone::step(double sleepTime){
                             counter = 0;
                             state = BREAKING;
                         }
+                        fail_counter_nm = 0;
+                        fail_counter_OOB = 0;
                     }
                     else{
                         counter = 0;
@@ -521,7 +523,7 @@ void ControlleDrone::updateStatus(statusCodes newStatus){
     drone_status_pub.publish(pub_msg);
 }
 
-void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground){
+void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground, bool relative_height = true){
     if(Status != MANUAL_CONTROLL){
         ROS_INFO_STREAM("Start Move");
         updateStatus(MOVING_SC);
@@ -544,23 +546,20 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
                 DJISDK::STABLE_ENABLE);
 
         if(relative_ground){
-            rTarget = headless ? getRotation().z : getDirectionAngle(x, y);
+            rTarget = angleabs(headless ? getRotation().z : getDirectionAngle(x, y));
             Target.x = x;
             Target.y = y;
-            Target.z = (getGPS().altitude - home_altitude) + z;
         }
         else{
-            rTarget = headless ? getRotation().z : getRotation().z + getDirectionAngle(x, y);
-            std::pair<float, float> tmp = remapDirections(x, y, getRotation().z);
+            rTarget = angleabs(headless ? getRotation().z : getRotation().z + getDirectionAngle(x, y));
 
-            // ROS_WARN_STREAM("whyyyy");
-            // ROS_WARN_STREAM("x: " << x << "\t" << tmp.first);
-            // ROS_WARN_STREAM("y:" << y << "\t" << tmp.second);
+            std::pair<float, float> tmp = remapDirections(x, y, getRotation().z);
 
             Target.x = tmp.first;
             Target.y = tmp.second;
-            Target.z = (getGPS().altitude - home_altitude) + z;
         }
+
+        Target.z = relative_height ? (getGPS().altitude - home_altitude) + z : home_altitude + z;
         
         if(!gotCtrlAuthority){
             ServiceAck ack = obtainCtrlAuthority();
@@ -762,12 +761,6 @@ ParrentDroneClass::ServiceAck ControlleDrone::releaseControle(){
 }
 
 bool ControlleDrone::takeoff(){
-    if (!set_local_position()) // We need this for height
-    {
-        ROS_ERROR("GPS health insufficient - No local frame reference for height. Exiting.");
-        return false;
-    }
-
     home_altitude = getGPS().altitude;
     
     uint8_t count = 0;

@@ -49,11 +49,10 @@ namespace SaR_Drone{
             BREAKING
         };
 
-        void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground);
+        void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground, bool relative_height = true);
         void StartMoveDrone(sensor_msgs::NavSatFix dest, bool headless);
         void StartRotate(float ofset, bool relative_current_rot); 
         void StopMoving();
-        void AbsolutHeight(float z);
 
         float getDirectionAngle(float x, float y);
         std::pair<float, float> remapDirections(float x, float y, float r);
@@ -66,13 +65,6 @@ namespace SaR_Drone{
         bool land();
         bool takeoff_land(int task);
 
-        bool set_local_position()
-        {
-            dji_sdk::SetLocalPosRef localPosReferenceSetter;
-            set_local_pos_reference.call(localPosReferenceSetter);
-            return localPosReferenceSetter.response.result;
-        }
-
         bool flying;
         bool landing;
         bool gotCtrlAuthority;
@@ -80,7 +72,6 @@ namespace SaR_Drone{
 
         ros::ServiceClient drone_task_service;
         ros::ServiceClient sdk_ctrl_authority_service;
-        ros::ServiceClient set_local_pos_reference;
 
         ros::Subscriber drone_commands_sub;
         ros::Subscriber drone_PRIO_commands_sub;

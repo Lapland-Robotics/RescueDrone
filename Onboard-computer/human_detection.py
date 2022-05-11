@@ -84,7 +84,7 @@ def callback(data):
   callbackData = data.Status
   rospy.loginfo("%d", callbackData)
   if callbackData == StartHumanDetect:
-    needToRun = True
+    #needToRun = True
     servo(8)
   if callbackData == NextStep:
     needData = True
