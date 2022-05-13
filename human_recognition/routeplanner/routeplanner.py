@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import time
 
 EdgeBL = [37,0]
 EdgeBR = [74,0]
@@ -9,8 +10,9 @@ DistanceB = 0
 DistanceR = 0
 DistanceT = 0
 DistanceL = 0
-
 PointsPL = 2
+pointsR = []
+pointsL = []
 
 def distancecalc():
     global EdgeBL
@@ -49,37 +51,26 @@ def distancecalc():
 
 def routeplanner():
     global PointsPL
-
-    global EdgeBL
-    global EdgeBR
-    global EdgeTL
-    global EdgeTR
+    global pointsR
+    global pointsL
 
     global DistanceB
     global DistanceR
     global DistanceT
     global DistanceL
 
-    pointsR = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    pointsL = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
     counter = 0
-    aantal = 0
-    while counter != DistanceL:
-        if counter % PointsPL == 0:
-            pointsL[aantal] = counter
-            aantal += 1
-        counter += 1
-    print("Points in L wing is: ", pointsL)
-
-    counter = 0
-    aantal = 0
+    amount = 0
     while counter != DistanceR:
-        if counter % PointsPL == 1:
-            pointsR[aantal] = counter
-            aantal += 1
+        if counter % PointsPL == 0:
+            pointsR.append(counter)
+            pointsL.append(counter)
+            amount += 1
         counter += 1
-    print("Points in R wing is: ", pointsR)
+
+    print("The calculated Y values on line R are: ", pointsR) 
+    print("The calculated Y values on line L are: ", pointsL)
+    print("")
 
 
 if _name=='main_':
