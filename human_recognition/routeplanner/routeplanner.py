@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 import time
 
-EdgeBL = [37,0]
-EdgeBR = [74,0]
-EdgeTL = [37,37]
-EdgeTR = [74,37]
+EdgeBL = [15,0]
+EdgeBR = [45,0]
+EdgeTL = [33,37]
+EdgeTR = [74,45]
 
 DistanceB = 0
 DistanceR = 0
 DistanceT = 0
 DistanceL = 0
+YDistanceT = 0
+YDistanceB = 0
+XDistanceR = 0
+XDistanceL = 0
 PointsPL = 2
 pointsR = []
 pointsL = []
@@ -24,6 +28,11 @@ def distancecalc():
     global DistanceR
     global DistanceT
     global DistanceL
+
+    global YDistanceT
+    global YDistanceB
+    global XDistanceR
+    global XDistanceL
 
 
     # EdgeTL     EdgeTR
@@ -47,7 +56,25 @@ def distancecalc():
     print("")
 
     if DistanceB != DistanceL != DistanceR != DistanceL:
-        print("It is not a square.")
+        if EdgeBL[0] >= EdgeTL[0]:
+            XDistanceL = EdgeBL[0] - EdgeTL[0]
+        else:
+            XDistanceL = EdgeTL[0] - EdgeBL[0]
+        
+        if EdgeTL[1] >= EdgeTR[1]:
+            YDistanceT = EdgeTL[1] - EdgeTR[1]
+        else:
+            YDistanceT = EdgeTR[1] - EdgeTL[1]
+
+        if EdgeTR[0] >= EdgeBR[0]:
+            XDistanceR = EdgeTR[0] - EdgeBR[0]
+        else:
+            XDistanceR = EdgeBR[0] - EdgeTR[0]
+
+        if EdgeBL[1] >= EdgeBR[1]:
+            YDistanceB = EdgeBL[1] - EdgeBR[1]
+        else:
+            YDistanceB = EdgeBR[1] - EdgeBL[1]
 
 def routeplanner():
     global PointsPL
@@ -75,4 +102,4 @@ def routeplanner():
 
 if _name=='main_':
     distancecalc()
-    routeplanner()
+    #routeplanner()
