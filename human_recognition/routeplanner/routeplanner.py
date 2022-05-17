@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import time
 
-EdgeBL = [3,0] #Corner Bottom Left
+EdgeBL = [0,0] #Corner Bottom Left
 EdgeBR = [15,0] #Corner Bottom Right
-EdgeTL = [4,25] #Corner Top Left
-EdgeTR = [17,17] #Corner Top Right
+EdgeTL = [0,15] #Corner Top Left
+EdgeTR = [15,15] #Corner Top Right
 
 DistanceB = 0 #Distance bottom
 DistanceR = 0 #Distance right
@@ -48,28 +48,27 @@ def distancecalc():
 
     print("")
 
-    if DistanceB != DistanceL != DistanceR != DistanceL:
-        if EdgeBL[0] >= EdgeTL[0]:
-            XDistanceL = EdgeBL[0] - EdgeTL[0]
-        else:
-            XDistanceL = EdgeTL[0] - EdgeBL[0]
-        print(XDistanceL)
-        if EdgeTL[1] >= EdgeTR[1]:
-            YDistanceT = EdgeTL[1] - EdgeTR[1]
-        else:
-            YDistanceT = EdgeTR[1] - EdgeTL[1]
-        print(YDistanceT)
-        if EdgeTR[0] >= EdgeBR[0]:
-            XDistanceR = EdgeTR[0] - EdgeBR[0]
-        else:
-            XDistanceR = EdgeBR[0] - EdgeTR[0]
-        print(XDistanceR)
-        if EdgeBL[1] >= EdgeBR[1]:
-            YDistanceB = EdgeBL[1] - EdgeBR[1]
-        else:
-            YDistanceB = EdgeBR[1] - EdgeBL[1]
-        print(YDistanceB)
-        print("")
+    if EdgeBL[0] >= EdgeTL[0]:
+        XDistanceL = EdgeBL[0] - EdgeTL[0]
+    else:
+        XDistanceL = EdgeTL[0] - EdgeBL[0]
+    print(XDistanceL)
+    if EdgeTL[1] >= EdgeTR[1]:
+        YDistanceT = EdgeTL[1] - EdgeTR[1]
+    else:
+        YDistanceT = EdgeTR[1] - EdgeTL[1]
+    print(YDistanceT)
+    if EdgeTR[0] >= EdgeBR[0]:
+        XDistanceR = EdgeTR[0] - EdgeBR[0]
+    else:
+        XDistanceR = EdgeBR[0] - EdgeTR[0]
+    print(XDistanceR)
+    if EdgeBL[1] >= EdgeBR[1]:
+        YDistanceB = EdgeBL[1] - EdgeBR[1]
+    else:
+        YDistanceB = EdgeBR[1] - EdgeBL[1]
+    print(YDistanceB)
+    print("")
 
 
 def routeplanner():
@@ -94,10 +93,21 @@ def routeplanner():
         if counter % PointsPL == 0:
             YpointsR.append(counter)
         counter += 1
-    
-    if XDistanceL > 0:
-        AXL = XDistanceL / PointsPL
-        print(AXL)
+
+    counter = 1
+    XDistanceR = 12
+    if XDistanceR == 0:
+        while counter != len(YpointsR):
+            XpointsR.append(EdgeBL[0])
+            counter += 1
+    else:
+        XVR = XDistanceR / len(YpointsR)
+        oldXVR = XVR
+        XpointsR.append(0)
+        while counter != len(YpointsR):
+            XpointsR.append(XVR)
+            XVR = XVR + oldXVR
+            counter += 1
 
     counter = 0
     while counter != DistanceL:
@@ -105,9 +115,11 @@ def routeplanner():
             YpointsL.append(counter)
         counter += 1
 
-    if XDistanceR > 0:
-        AXR = XDistanceR / PointsPL
-        print(AXR)
+    counter = 0
+    if XDistanceL == 0:
+        while counter != len(YpointsL):
+            XpointsL.append(EdgeBL[0])
+            counter += 1
 
     print("The calculated Y values on line R are: ", YpointsR) 
     print("The calculated X values on line R are: ", XpointsR) 
@@ -116,6 +128,6 @@ def routeplanner():
     print("")
 
 
-if _name=='main_':
+if __name__=='__main__':
     distancecalc()
     routeplanner()
