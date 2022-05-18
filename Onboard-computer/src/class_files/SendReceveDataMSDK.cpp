@@ -9,12 +9,23 @@ SendReceveDataMSDK::SendReceveDataMSDK(): msg_ID(1)
         ready = false;
         from_mobile_data_subscriber = nh.subscribe<dji_sdk::MobileData>("dji_sdk/from_mobile_data", 10, &SendReceveDataMSDK::fromMobileDataSubscriberCallback, this);
         send_mobile_data_subscriber = nh.subscribe<sar_drone::send_mobile>(SEND_TO_MOBILE, 10, [this](const sar_drone::send_mobile::ConstPtr& msg){
+            MobileReceiveCalback = false;
             dataToMobile MobileSend;
             MobileSend.cmdID = msg->cmdID;
             MobileSend.errorCode = msg->errorCode;
-            MobileSend.Latitude = msg->Latitude;
-            MobileSend.Longitude = msg->Longitude;
-            sendToMobile(MobileSend);
+            MobileSend.Latitude = msg->coordinate.latitude;
+            MobileSend.Longitude = msg->coordinate.longitude;
+            // ROS_WARN_STREAM(MobileSend);
+            ros::Time start_time = ros::Time::now();
+            ros::Duration elapsed_time;
+            while(!MobileReceiveCalback){
+                elapsed_time = ros::Time::now() - start_time;
+                if(elapsed_time > ros::Duration(0.5)){
+                    sendToMobile(MobileSend);
+                    start_time = ros::Time::now();
+                }
+                else spin(0.01);
+            }
         });
 
         mobile_data_service = nh.serviceClient<dji_sdk::SendMobileData>("dji_sdk/send_data_to_mobile");
@@ -27,8 +38,11 @@ SendReceveDataMSDK::SendReceveDataMSDK(): msg_ID(1)
             ros::Duration(0.5).sleep();
         }
         ready = true;
+        gotArea = true;
     }
-  }
+    std::cout << std::fixed;
+    std::cout << std::setprecision(10);
+}
 
 SendReceveDataMSDK::~SendReceveDataMSDK()
 {
@@ -108,18 +122,41 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
             break;
         }
 
-        case START_COORDINATES:{
-            ROS_INFO_STREAM("Got start coordinates from MSDK");
+        case AREA_COORDINATES:{
+            ROS_INFO_STREAM("Got area coordinates from MSDK");
 
-            ROS_INFO_STREAM("Latitude: " << MobileReseive.Latitude << "\tLongitude: " << MobileReseive.Longitude);
+            ROS_WARN_STREAM("Latitude: " << std::fixed << std::setprecision(10) << MobileReseive.Latitude << "\tLongitude: " << MobileReseive.Longitude);
+            
+            if(gotArea){
+                area.clear();
+                gotArea = false;
+            }
+            sar_drone::coordinates tmp;
+            tmp.latitude = MobileReseive.Latitude;
+            tmp.longitude = MobileReseive.Longitude;
+            area.emplace_back(tmp);
+            
+            dataToMobile MobileSend;
+            MobileSend.cmdID = AREA_COORDINATES;
+            MobileSend.errorCode = NO_ERROR;
+            MobileSend.Latitude = area.back().latitude;
+            MobileSend.Longitude = area.back().longitude;
+            sendToMobile(MobileSend);
+            break;
+        }
 
+        case AREA_FINISHED:{
+            ROS_WARN_STREAM("Got all area coordinates from MSDK");
             sar_drone::directions msg;
             msg.ID = msg_ID;
-            msg.Command = START_COORDINATES;
-            msg.Latitude = MobileReseive.Latitude;
-            msg.Longitude = MobileReseive.Longitude;
+            msg.Command = AREA_COORDINATES;
+            msg.coordinate = area;
             map_commands_pub.publish(msg);
-            break;
+            ROS_WARN_STREAM("this is the area with size: " << area.size());
+            for(auto &i : area){
+                ROS_WARN_STREAM(i);
+            }
+            gotArea = true;
         }
 
         case ARE_YOU_ALIVE:{
@@ -129,6 +166,10 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
             MobileSend.errorCode = ready ? NO_ERROR : NOT_READY_YET;
             sendToMobile(MobileSend);
             break;
+        }
+
+        case MOBILE_RECEIVE_CALLBACK:{
+            MobileReceiveCalback = true;
         }
 
         default:{
