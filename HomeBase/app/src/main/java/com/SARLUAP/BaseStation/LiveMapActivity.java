@@ -1,5 +1,7 @@
 package com.sarLuap.baseStation;
 
+import static java.lang.Math.abs;
+
 import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.view.View;
@@ -9,11 +11,16 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.mapbox.geojson.Point;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import dji.common.error.DJIError;
 import dji.common.flightcontroller.LocationCoordinate3D;
+import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
 import dji.sdk.battery.Battery;
 import dji.sdk.flightcontroller.FlightController;
@@ -45,6 +52,16 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     private sound_timer battery;
     private sound_timer found_person;
 
+    private long updateTime = 0;
+    private static final long updateFrequency = 40;
+    private static boolean updatingDrone = false;
+
+    private AtomicBoolean error = new AtomicBoolean(false);
+    private AtomicBoolean nextAreaCoordinate = new AtomicBoolean(false);
+
+    private List<Point> area;
+    private int counter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -52,10 +69,6 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         setContentView(R.layout.live_map_view);
 
         initUi();
-
-        // IntentFilter filter = new IntentFilter();
-        // filter.addAction(DroneConnection.FLAG_CONNECTION_CHANGE);
-        // registerReceiver(mReceiver, filter);
 
         CustomFun.HideNavBar(this);
 
@@ -104,8 +117,8 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         btnTrack = findViewById(R.id.btn_position_tracking);
         btnStartSearch = findViewById(R.id.btn_start_search);
         btnForceStop = findViewById(R.id.btn_force_Stop);
-        btnStartCoordinates = findViewById(R.id.btn_start_coordinates);
-        btnSendArea = findViewById(R.id.btn_send_area);
+        btnStartCoordinates = findViewById(R.id.btn_send_area);
+        btnSendArea = findViewById(R.id.btn_remove_last);
         btnRemoveArea = findViewById(R.id.btn_remove_area);
 
         btnBack.setOnClickListener(this);
@@ -172,6 +185,18 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                                     CustomFun.showToast("successfully start Search", getApplicationContext());
                                     break;
 
+                                case 22:
+//                                    CustomFun.showToast("yes" + counter, getApplicationContext());
+                                    if(abs(toDouble(Arrays.copyOfRange(bytes, 2, 10)) - area.get(counter).latitude()) < 0.002 && abs(toDouble(Arrays.copyOfRange(bytes, 10, 18)) - area.get(counter).longitude()) < 0.002){
+                                        counter ++;
+                                        nextAreaCoordinate.set(true);
+                                    }
+                                    else{
+                                        error.set(true);
+                                        CustomFun.showToast("got wrong coordinate callback", getApplicationContext());
+                                    }
+                                    break;
+
                                 case 112:
                                     String tmp = "Found Person at lat: " + toDouble(Arrays.copyOfRange(bytes, 2, 10)) + " long: " + toDouble(Arrays.copyOfRange(bytes, 10, 18));
                                     CustomFun.showToast(tmp, getApplicationContext());
@@ -214,31 +239,42 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                         case 20:
                             CustomFun.showToast("maybe give me some instructions???", getApplicationContext());
                             break;
+
+                        case 22:
+                            CustomFun.showToast("Onboard computer has some problems with the area coordinate", getApplicationContext());
+                            break;
+
                     }
                 }
+
+                byte[] sendData = {(byte) 255};
+                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
             });
 
             mFlightCon.setStateCallback(flightControllerState -> {
-                LocationCoordinate3D location = flightControllerState.getAircraftLocation();
-                double headTmp = mFlightCon.getCompass().getHeading();
-                if(Double.isNaN(location.getLongitude()) || Double.isNaN(location.getLatitude()) || Double.isNaN(headTmp)){
-                    if(lastLat != 0 && lastLong != 0){
-                        liveMapClass.updateDrone(lastLong,lastLat,0,true);
+                if(!updatingDrone && (System.currentTimeMillis() - updateTime) > updateFrequency ) {
+                    updatingDrone = true;
+                    LocationCoordinate3D location = flightControllerState.getAircraftLocation();
+                    float headTmp = mFlightCon.getCompass().getHeading();
+                    if (Double.isNaN(location.getLongitude()) || Double.isNaN(location.getLatitude()) || Double.isNaN(headTmp)) {
+                        if (lastLat != 0 && lastLong != 0) {
+                            liveMapClass.updateDrone(lastLong, lastLat, headTmp);
+                        } else {
+                            liveMapClass.removeDrone();
+                        }
+                    } else {
+                        lastHead = headTmp;
+                        lastLat = location.getLatitude();
+                        lastLong = location.getLongitude();
+                        liveMapClass.updateDrone(lastLong, lastLat, headTmp);
                     }
-                    else {
-                        liveMapClass.updateDrone(0,0,0,false);
-                    }
-                }
-                else{
-                    lastHead = headTmp;
-                    lastLat = location.getLatitude();
-                    lastLong = location.getLongitude();
-                    liveMapClass.updateDrone(lastLong, lastLat, 0, true);
+                    updateTime = System.currentTimeMillis();
+                    updatingDrone = false;
                 }
             });
 
         } else {
-//            finish();
+            finish();
         }
 
         if (null != mRemoteCon && mRemoteCon.isConnected()){
@@ -278,12 +314,8 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
             }
 
             case R.id.btn_start_search:{
-                byte[] sendData = {(byte) 0x14};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, djiError -> {
-                    if(djiError != null){
-                        CustomFun.showToast(djiError.getDescription(), getApplicationContext());
-                    }
-                });
+                byte[] sendData = {(byte) 20};
+                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
                 MainActivity.inSearch = true;
                 if(!beep.isPlaying()) {
                     beep.startTimer(1000);
@@ -293,33 +325,34 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
             }
 
             case R.id.btn_force_Stop:{
-                byte[] sendData = {(byte) 0x15};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, djiError -> {
-                    if(djiError != null){
-                        CustomFun.showToast(djiError.getDescription(), getApplicationContext());
-                    }
-                });
+                byte[] sendData = {(byte) 21};
+                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
                 break;
             }
 
-            case R.id.btn_start_coordinates:{
-                byte[] lat = doubleToByte(66.48211996577223);
-                byte[] lon = doubleToByte(25.72159975108791);
-                byte[] sendData = new byte[lat.length + lon.length + 2];
-                sendData[0] = (byte) 22;
-                for(int i = 0; i < sendData.length - 2; i ++){
-                    sendData[i + 2] = i < lat.length? lat[i] : lon[i - lat.length];
-                }
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, djiError -> {
-                    if(djiError != null){
-                        CustomFun.showToast(djiError.getDescription(), getApplicationContext());
-                    }
-                });
+            case R.id.btn_remove_last:{
+                liveMapClass.removeLastPoint();
                 break;
             }
 
             case R.id.btn_send_area:{
-                CustomFun.showToast("area sent", getApplicationContext());
+                counter = 0;
+                area = liveMapClass.getArea();
+
+                error.set(false);
+                nextAreaCoordinate.set(true);
+
+                while(!error.get() && counter < area.size()){
+                    if(nextAreaCoordinate.get()) {
+                        nextAreaCoordinate.set(false);
+                        mFlightCon.sendDataToOnboardSDKDevice(encodeData(area.get(counter).latitude(), area.get(counter).longitude(), (byte) 22), tmp);
+                    }
+                }
+
+                byte[] sendData = {(byte) 23};
+                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+
+                CustomFun.showToast(error.get() ? "error with sending area" : "area successfully send", getApplicationContext());
                 break;
             }
 
@@ -333,6 +366,19 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     @NonNull
+    private byte[] encodeData(double lat, double lon, byte command){
+        byte[] Blat = doubleToByte(lat);
+        byte[] Blon = doubleToByte(lon);
+        byte[] sendData = new byte[Blat.length + Blon.length + 1];
+
+        sendData[0] = command;
+        for(int i = 0; i < sendData.length - 1; i ++){
+            sendData[i + 1] = i < Blat.length? Blat[i] : Blon[i - Blat.length];
+        }
+        return sendData;
+    }
+
+    @NonNull
     private byte[] doubleToByte(double input){
         byte[] output = new byte[8];
         long lng = Double.doubleToLongBits(input);
@@ -341,4 +387,10 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         }
         return output;
     }
+
+    CommonCallbacks.CompletionCallback tmp = djiError -> {
+        if(djiError != null){
+            CustomFun.showToast(djiError.getDescription(), getApplicationContext());
+        }
+    };
 }

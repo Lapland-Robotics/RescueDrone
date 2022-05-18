@@ -23,9 +23,9 @@
     <string name="button_position_tracking">Track position: </string>
     <string name="button_start_search">Start Searching</string>
     <string name="button_force_stop">Stop Searching</string>
-    <string name="button_start_coordinates">Start Coordinates</string>
+    <string name="button_send_area">send area</string>
     <string name="button_Start">Start</string>
-    <string name="button_send_area">Send area</string>
+    <string name="button_remove_last">Remove last point</string>
     <string name="button_remove_area">Remove area</string>
 
     <!-- Activity Strings -->

@@ -10,16 +10,22 @@ import android.widget.Button
 import androidx.annotation.DrawableRes
 import androidx.appcompat.content.res.AppCompatResources
 import com.mapbox.android.gestures.MoveGestureDetector
+import com.mapbox.geojson.MultiPoint
 import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.extension.style.image.image
 import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.addLayerBelow
+import com.mapbox.maps.extension.style.layers.generated.FillLayer
 import com.mapbox.maps.extension.style.layers.generated.SymbolLayer
+import com.mapbox.maps.extension.style.layers.generated.fillLayer
 import com.mapbox.maps.extension.style.layers.generated.symbolLayer
 import com.mapbox.maps.extension.style.layers.getLayerAs
+import com.mapbox.maps.extension.style.layers.properties.generated.IconAnchor
 import com.mapbox.maps.extension.style.layers.properties.generated.IconRotationAlignment
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
@@ -34,6 +40,7 @@ import com.mapbox.maps.plugin.gestures.gestures
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
+import kotlin.math.abs
 
 
 class LiveMapClass {
@@ -47,7 +54,9 @@ class LiveMapClass {
     }
 
     private val onMapLongClickListener = OnMapLongClickListener { point ->
-            updateCorner(point.longitude(), point.latitude())
+            area.add(point)
+            updatePoints()
+//            CustomFun.showToast("" + area.size, liveMapActivityIntern)
             false
         }
 
@@ -66,18 +75,20 @@ class LiveMapClass {
     private lateinit var liveMapActivityIntern: LiveMapActivity
     private lateinit var mapView: MapView
     private lateinit var btnTrack: Button
-    private var counter: Int = 0
+    private var area: MutableList<Point> = ArrayList()
 
+    private var lastRot: Double = 0.0
+    private var lastLong: Double = 0.0
+    private var lastLat: Double = 0.0
     private var posTrackingON: Boolean = false
 
     // getters
     fun getPosTrackingON(): Boolean {return posTrackingON}
-
+    fun getArea(): MutableList<Point>{return area}
 
     //public fun
     @SuppressLint("SetTextI18n")
     fun mapInit(liveMapActivityTmp: LiveMapActivity, mapViewTmp: MapView, trackingButton: Button ) {
-        counter = 0
         liveMapActivityIntern = liveMapActivityTmp
         mapView = mapViewTmp
         btnTrack = trackingButton
@@ -87,6 +98,7 @@ class LiveMapClass {
                 .zoom(14.0)
                 .build()
         )
+
         mapView.getMapboxMap().loadStyle(
             styleExtension = style(Style.OUTDOORS){
                 +image(DRONE) {
@@ -95,32 +107,11 @@ class LiveMapClass {
                     }
                 }
 
-                +geoJsonSource(SOURCE_DRONE){
-                    geometry(Point.fromLngLat(LONGITUDE, LATITUDE))
-                }
-
-                +symbolLayer(LAYER_DRONE, SOURCE_DRONE){
-                    iconImage(DRONE)
-                    iconSize(0.05)
-                    iconRotationAlignment(IconRotationAlignment.MAP)
-                    iconOpacity(0.0)
-                }
-
-                +image(CORNER){
+                +image(POINTS){
                     bitmapFromDrawableRes(liveMapActivityIntern, R.drawable.ic_map_corner_point)?.let {
                         bitmap(it)
                     }
                 }
-//                +geoJsonSource(SOURCE_CUL){
-//                    geometry(Point.fromLngLat(LONGITUDE, LATITUDE))
-//                }
-//
-//                +symbolLayer(LAYER_CUL, SOURCE_CUL){
-//                    iconImage(CORNER_UL)
-//                    iconSize(0.02)
-//                    iconOpacity(1.0)
-//                }
-
             }
         ) {
             initLocationComponent()
@@ -133,50 +124,139 @@ class LiveMapClass {
 
         Style.OnStyleLoaded { mapView.compass.updateSettings { enabled = true; fadeWhenFacingNorth = false; clickable = true } }
 
-
+//        area.clear()
 
         posTrackingON = false
         btnTrack.text = "" + liveMapActivityIntern.getText(R.string.button_position_tracking) + " OFF"
     }
 
-    fun updateDrone(long: Double, lat: Double, rot: Double, show: Boolean){
+    fun updateDrone(long: Double, lat: Double, rot: Double){
+
+        val needRotUpdated = (abs(rot - lastRot) > 10)
+        val needPointUpdated = (abs(long - lastLong) > 0.000015 || abs(lat - lastLat) > 0.000015)
 
         mapView.getMapboxMap().getStyle{ style ->
             val layer = style.getLayerAs<SymbolLayer>(LAYER_DRONE)
             val source = style.getSourceAs<GeoJsonSource>(SOURCE_DRONE)
 
-            source?.geometry(Point.fromLngLat(if(show) long else LONGITUDE, if(show) lat else LATITUDE))
-            layer?.iconRotate(rot)
-            layer?.iconOpacity(if(show) 1.0 else 0.0)
+            if(source == null){
+                style.addSource(geoJsonSource(SOURCE_DRONE).geometry(Point.fromLngLat(long, lat)))
+            }
+            else if (needPointUpdated){
+                source.geometry(Point.fromLngLat(long, lat))
+                lastLong = long
+                lastLat = lat
+            }
 
+            if(layer == null){
+                style.addLayer(symbolLayer(LAYER_DRONE, SOURCE_DRONE){
+                    iconImage(DRONE)
+                    iconSize(0.05)
+                    iconRotationAlignment(IconRotationAlignment.MAP)
+                    iconRotate(rot)
+                })
+            }
+            else if(needRotUpdated){
+                layer.iconRotate(rot)
+                lastRot = rot
+            }
         }
     }
 
-    private fun updateCorner(long: Double, lat: Double){
-        mapView.getMapboxMap().getStyle(){ style ->
-            val layer = style.getLayerAs<SymbolLayer>(LAYER_CORNER + counter.toString())
-            val source = style
+    private fun updatePoints() {
+        mapView.getMapboxMap().getStyle{ style ->
+            val layer = style.getLayerAs<SymbolLayer>(LAYER_POINTS)
+            val source = style.getSourceAs<GeoJsonSource>(SOURCE_POINTS)
 
-            style.addSource(geoJsonSource(SOURCE_CORNER + counter.toString()).geometry(Point.fromLngLat(long, lat)))
-            style.addLayer(symbolLayer(LAYER_CORNER + counter.toString(),SOURCE_CORNER + counter.toString()){
-                iconImage(CORNER)
-                iconSize(0.05)
-                iconOpacity(1.0)
-                iconAllowOverlap(true)
-            })
+            if(source == null){
+                style.addSource(geoJsonSource(SOURCE_POINTS).geometry(MultiPoint.fromLngLats(area)))
+            }
+            else{
+                source.geometry(MultiPoint.fromLngLats(area))
+            }
+
+            if(layer == null) {
+                style.addLayer(symbolLayer(LAYER_POINTS, SOURCE_POINTS) {
+                    iconImage(POINTS)
+                    iconSize(0.05)
+                    iconOpacity(1.0)
+                    iconAllowOverlap(true)
+                    iconAnchor(IconAnchor.BOTTOM)
+                })
+            }
         }
-        counter ++
+
+        if(area.size > 3){
+            updateArea()
+        }
+        else if(area.size == 3){
+            area.add(area.first())
+            removeArea()
+            updateArea()
+            area.removeLast()
+        }
+        else{
+            removeArea()
+        }
+    }
+
+    private fun updateArea(){
+
+        mapView.getMapboxMap().getStyle{ style ->
+            val source = style.getSourceAs<GeoJsonSource>(SOURCE_AREA)
+            val layer = style.getLayerAs<FillLayer>(LAYER_AREA)
+
+            val areaTmp: MutableList<MutableList<Point>> = ArrayList()
+            areaTmp.add(area)
+
+            if(source == null){
+                style.addSource(geoJsonSource(SOURCE_AREA).geometry(Polygon.fromLngLats(areaTmp)))
+            }
+            else{
+                source.geometry(Polygon.fromLngLats(areaTmp))
+            }
+
+            if(layer == null){
+                style.addLayerBelow(fillLayer(LAYER_AREA, SOURCE_AREA){
+                    fillColor(liveMapActivityIntern.getColor(R.color.colorPrimary))
+                    fillOpacity(0.5)
+                }, LAYER_POINTS)
+            }
+        }
+    }
+
+    fun removeDrone(){
+        mapView.getMapboxMap().getStyle { style ->
+            style.removeStyleLayer(LAYER_DRONE)
+            style.removeStyleSource(SOURCE_DRONE)
+        }
+    }
+
+    fun removeLastPoint(){
+        if(area.size == 0){
+            return
+        }
+        area.removeLast()
+        updatePoints()
     }
 
     fun removePoints(){
-        mapView.getMapboxMap().getStyle(){ style ->
-            for (i in 0 until counter){
-                style.removeStyleLayer(LAYER_CORNER + i.toString())
-                style.removeStyleSource(SOURCE_CORNER + i.toString())
-            }
+        mapView.getMapboxMap().getStyle{ style ->
+            style.removeStyleLayer(LAYER_POINTS)
+            style.removeStyleSource(SOURCE_POINTS)
         }
-        counter = 0;
+        removeArea()
+        area.clear()
     }
+
+    private fun removeArea(){
+        mapView.getMapboxMap().getStyle { style ->
+            style.removeStyleLayer(LAYER_AREA)
+            style.removeStyleSource(SOURCE_AREA)
+        }
+    }
+
+
 
     @SuppressLint("SetTextI18n")
     fun dismissedCameraTracking() {
@@ -272,14 +352,15 @@ class LiveMapClass {
     }
 
     companion object {
-        private const val CORNER = "corner"
-        private const val SOURCE_CORNER = "source_corner"
-        private const val LAYER_CORNER = "layer_corner"
+        private const val POINTS = "points"
+        private const val SOURCE_POINTS = "source_points"
+        private const val LAYER_POINTS = "layer_points"
+
+        private const val SOURCE_AREA = "source_area"
+        private const val LAYER_AREA = "layer_area"
 
         private const val DRONE = "drone"
         private const val SOURCE_DRONE = "source_drone"
         private const val LAYER_DRONE = "layer_drone"
-        private const val LATITUDE = 0.0
-        private const val LONGITUDE = 0.0
     }
 }
