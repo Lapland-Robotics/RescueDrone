@@ -38,7 +38,7 @@ namespace SaR_Drone{
     private:
 
         statusCodes Status;
-        statusCodes OldStatus;
+        // statusCodes OldStatus;
 
         void updateStatus(statusCodes newStatus);
 
@@ -56,7 +56,7 @@ namespace SaR_Drone{
 
         float getDirectionAngle(float x, float y);
         std::pair<float, float> remapDirections(float x, float y, float r);
-        geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset);
+        geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print = false);
 
         ServiceAck obtainCtrlAuthority();
         ServiceAck releaseControle();
@@ -91,6 +91,11 @@ namespace SaR_Drone{
         uint8_t fail_counter_nm;
         uint8_t fail_counter_OOB;
         sensor_msgs::NavSatFix startGPS;
+        sensor_msgs::NavSatFix StartAIGPS;
+
+        geometry_msgs::Point Targettmp;
+        geometry_msgs::Point cmdtmp;
+        bool readyForNextMap;
 
         geometry_msgs::Point Target;
         geometry_msgs::Point lastPos;
