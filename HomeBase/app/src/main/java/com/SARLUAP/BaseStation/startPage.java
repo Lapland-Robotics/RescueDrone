@@ -139,71 +139,62 @@ public class startPage extends AppCompatActivity implements View.OnClickListener
 
     private void startSDKRegistration() {
         if (isRegistrationInProgress.compareAndSet(false, true)) {
-            AsyncTask.execute(new Runnable() {
-                @Override
-                public void run() {
+            AsyncTask.execute(() -> {
 //                    showToast( "registering, pls wait...");
-                    DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
-                        @Override
-                        public void onRegister(DJIError djiError) {
-                            if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
-                                DJILog.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
-                                DJISDKManager.getInstance().startConnectionToProduct();
+                DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
+                    @Override
+                    public void onRegister(DJIError djiError) {
+                        if (djiError == DJISDKError.REGISTRATION_SUCCESS) {
+                            DJILog.e("App registration", DJISDKError.REGISTRATION_SUCCESS.getDescription());
+                            DJISDKManager.getInstance().startConnectionToProduct();
 
-                            } else {
-                                CustomFun.showToast( "Register sdk fails, check network is available", getApplicationContext());
-                            }
-                            Log.v(TAG, djiError.getDescription());
+                        } else {
+                            CustomFun.showToast( "Register sdk fails, check network is available", getApplicationContext());
                         }
+                        Log.v(TAG, djiError.getDescription());
+                    }
 
-                        @Override
-                        public void onProductDisconnect() {
-                            Log.d(TAG, "onProductDisconnect");
+                    @Override
+                    public void onProductDisconnect() {
+                        Log.d(TAG, "onProductDisconnect");
 
+                    }
+                    @Override
+                    public void onProductConnect(BaseProduct baseProduct) {
+                        Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
+
+                    }
+
+                    @Override
+                    public void onProductChanged(BaseProduct baseProduct) {
+
+                    }
+
+                    @Override
+                    public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
+                                                  BaseComponent newComponent) {
+
+                        if (newComponent != null) {
+                            newComponent.setComponentListener(isConnected -> Log.d(TAG, "onComponentConnectivityChanged: " + isConnected));
                         }
-                        @Override
-                        public void onProductConnect(BaseProduct baseProduct) {
-                            Log.d(TAG, String.format("onProductConnect newProduct:%s", baseProduct));
+                        Log.d(TAG,
+                                String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
+                                        componentKey,
+                                        oldComponent,
+                                        newComponent));
 
-                        }
+                    }
 
-                        @Override
-                        public void onProductChanged(BaseProduct baseProduct) {
+                    @Override
+                    public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
 
-                        }
+                    }
 
-                        @Override
-                        public void onComponentChange(BaseProduct.ComponentKey componentKey, BaseComponent oldComponent,
-                                                      BaseComponent newComponent) {
+                    @Override
+                    public void onDatabaseDownloadProgress(long l, long l1) {
 
-                            if (newComponent != null) {
-                                newComponent.setComponentListener(new BaseComponent.ComponentListener() {
-
-                                    @Override
-                                    public void onConnectivityChange(boolean isConnected) {
-                                        Log.d(TAG, "onComponentConnectivityChanged: " + isConnected);
-                                    }
-                                });
-                            }
-                            Log.d(TAG,
-                                    String.format("onComponentChange key:%s, oldComponent:%s, newComponent:%s",
-                                            componentKey,
-                                            oldComponent,
-                                            newComponent));
-
-                        }
-
-                        @Override
-                        public void onInitProcess(DJISDKInitEvent djisdkInitEvent, int i) {
-
-                        }
-
-                        @Override
-                        public void onDatabaseDownloadProgress(long l, long l1) {
-
-                        }
-                    });
-                }
+                    }
+                });
             });
         }
     }
@@ -223,7 +214,7 @@ public class startPage extends AppCompatActivity implements View.OnClickListener
     private void initUi(){
         mBtnOpen = findViewById(R.id.act_start_continue);
         mBtnOpen.setOnClickListener(this);
-//        mBtnOpen.setEnabled(false);
+        mBtnOpen.setEnabled(false);
 
         mDottedLine1 = findViewById(R.id.connection_img_dot1);
         mDottedLine2 = findViewById(R.id.connection_img_dot2);
@@ -329,8 +320,8 @@ public class startPage extends AppCompatActivity implements View.OnClickListener
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.act_start_continue){
-//            Intent intent = new Intent(this, MainActivity.class);
-            Intent intent = new Intent(this, LiveMapActivity.class);
+            Intent intent = new Intent(this, MainActivity.class);
+//            Intent intent = new Intent(this, LiveMapActivity.class);
             startActivity(intent);
             initUi();
         }

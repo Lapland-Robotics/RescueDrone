@@ -37,6 +37,7 @@ HumanTL = 117 #Human (framed in) top left
 HumanTC = 113 #Human (framed in) top center
 HumanTR = 118 #Human (framed in) top right
 # HumanNF = 14 #Human not in frame
+HumanRNSA = 109
 HumanRNS = 111 #human recognition not succeeded, back to bodytemp detection
 HumanRS = 112 #human recognition succeeded
 # SGPS = 17 #Send GPS
@@ -52,6 +53,12 @@ personDetected = False #Variable to check if a human has been found inside the t
 needToRun = False #Command to rerun the program after it has found a person
 needData = False #Command to receive from the drone in order to determine if it wants data
 #display = jetson.utils.glDisplay()
+
+
+servo = 32 #GPIO pin
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(servo, GPIO.OUT)
+p=GPIO.PWM(servo,50) # 50hz frequency
 
 def signal_handler(signal, frame):
   print("got sigint interupt")
@@ -84,7 +91,7 @@ def callback(data):
   callbackData = data.Status
   rospy.loginfo("%d", callbackData)
   if callbackData == StartHumanDetect:
-    #needToRun = True
+    needToRun = True
     servo(8)
   if callbackData == NextStep:
     needData = True
@@ -128,24 +135,11 @@ def raw_to_8bit(data):
   cv2.line(img, (x, y - 2), (x, y + 2), color, 1)
 
 def servo(angle):
-  servo = 32 #GPIO pin
   start = 4 #4 is 45 degr
   stop = 8 #8 is stop
   eyelevel = 2.5 #2.5 is 90 degr
-
-  GPIO.setmode(GPIO.BOARD)
-  GPIO.setup(servo, GPIO.OUT)
-  p=GPIO.PWM(servo,50) # 50hz frequency
-  p.start(2.5) # starting duty cycle ( it set the servo to 0 degree )
-  if angle == start:
-    p.ChangeDutyCycle(start)
-    time.sleep(2)
-  elif angle == stop:
-    p.ChangeDutyCycle(stop)
-    time.sleep(2)
-  elif angle == eyelevel:
-    p.ChangeDutyCycle(eyelevel)
-    time.sleep(2)
+  p.ChangeDutyCycle(angle)
+  #time.sleep(2)
 
 def ircam():
   ctx = POINTER(uvc_context)()
@@ -214,7 +208,7 @@ def ircam():
             dataa = data
             while x < 120:
               while y < 160:
-                if dataa[x,y] > 28300: #Pixel more than 30 degrees Celcius
+                if dataa[x,y] > 30315: #28300: #Pixel more than 30 degrees Celcius
                   if dataa[x,y] < 31355: #Pixel less than 40 degrees Celcius
                     counter = counter + 1
                 y = y + 1
@@ -245,7 +239,7 @@ def ircam():
             #cv2.imshow('Body temperature detection', img)
             #cv2.waitKey(1)
               
-            if (counterC >= 100):
+            if (counterC >= 50):
               talkerPRIO(BodyTempDS) #bodytemp detection succeeded
               AI()
               if AIDone and not personDetected:
@@ -258,7 +252,7 @@ def ircam():
                 AIDone = False
                 personDetected = False
                 sendTempDone = False
-                talkerPRIO(HumanRNS) #human recognition not succeeded, back to bodytemp detection
+                talkerPRIO(HumanRNSA) #human recognition not succeeded, back to bodytemp detection
                 print("Human recognition not succeeded, back to bodytemp detection")
               elif personDetected:
                 talkerPRIO(HumanRS) #human recognition succeeded
@@ -305,7 +299,7 @@ def AI():
   global needData
   global personDetected
 
-  timer = threading.Timer(60.0, TimerCallback)
+  timer = threading.Timer(15.0, TimerCallback)
   timer.start()
 
   servo(4)
@@ -371,6 +365,8 @@ if __name__ == '__main__':
   pub_prio = rospy.Publisher('directionsPRIO', directions, queue_size=10)
 
   signal.signal(signal.SIGINT, signal_handler)
+
+  p.start(2.5) # starting duty cycle ( it set the servo to 0 degree )
 
   listener()
   while True:

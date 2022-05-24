@@ -7,6 +7,7 @@
 #define STATUS_TOPPIC "status"
 #define SEND_TO_MOBILE "mobile_messages"
 
+#define SEARCH_ALTITUDE 4.0
 #define DISTANCE_SLOWER 50.0
 #define SPEED_MAX 30.0
 #define SPEED_FAST 5.0
@@ -20,6 +21,8 @@
 #define YAW_THRESHOLD (0.025 * M_PI)
 
 #define HD_MOVE 1.0
+
+// #define DEBUG_CON_PRINT 
 
 namespace SaR_Drone{
     enum msgCommands{
@@ -35,9 +38,8 @@ namespace SaR_Drone{
         //MSDK -> mapping alg commands
         START_SEARCH = 20,
         STOP_SEARCH = 21,
-        START_COORDINATES = 22,
-        AREA_COORDINATES = 23,
-        AREA_FINISHED = 24,
+        AREA_COORDINATES = 22,
+        AREA_FINISHED = 23,
 
         DEMO = 30,
 
@@ -50,6 +52,7 @@ namespace SaR_Drone{
         MA_MOVE_RELATIVE_BODY = 48,
 
         //human detection commands
+        HD_I_WAS_WRONG_AI = 109,
         HD_FOUND_PERSON_I_THINK = 110,
         HD_I_WAS_WRONG = 111,
         HD_FOUND_PERSON_IM_SERTAIN = 112,
@@ -68,6 +71,8 @@ namespace SaR_Drone{
         HD_START_AI = 125,
 
         ARE_YOU_ALIVE = 200,
+
+        MOBILE_RECEIVE_CALLBACK = 255
     };
 
     enum statusCodes{
@@ -80,8 +85,11 @@ namespace SaR_Drone{
         FOUND_HUMAN = 7,
         BACK_TO_BASE = 8,
         LANDING = 9,
-        
+
         START_HUMAN_DETECTION = 10,
+        
+        BACK_TO_MAPPING_ALG_MOVING = 11,
+        BACK_TO_MAPPING_ALG_NEXT_STEP = 12,
 
         MAPPING_ALGORITM_DIDNT_FINISH_MOVE = 40,
 

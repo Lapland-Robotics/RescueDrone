@@ -60,7 +60,7 @@ namespace SaR_Drone{
 
         std::vector<std::pair<double, double>> area;
         std::vector<std::pair<float, float>> route;
-        std::pair<double, double> start_location;
+        std::pair<double, double> start_location; //first = lat, second = long
         std::pair<double, double> home_base;
 
         ros::NodeHandle nh;

@@ -45,11 +45,15 @@ void mapAlg::step(double sleepTime){
                 ROS_INFO_STREAM("Go to start");
                 
                 sar_drone::directions return_msg;
+                sar_drone::coordinates coord_msg;
+
+                coord_msg.latitude = start_location.first;
+                coord_msg.longitude = start_location.second;
+                coord_msg.altitude = SEARCH_ALTITUDE;
+
                 return_msg.ID = msg_ID;
                 return_msg.Command = MA_MOVE_COORDINATES;
-                return_msg.Latitude = start_location.first;
-                return_msg.Longitude = start_location.second;
-                return_msg.z = 3;
+                return_msg.coordinate.push_back(coord_msg);
                 drone_commands_pub.publish(return_msg);
 
                 next_local_status = WAIT_STARTING;
@@ -76,10 +80,10 @@ void mapAlg::step(double sleepTime){
                 return_msg.ID = msg_ID;
                 return_msg.Command = MA_MOVE_RELATIVE_GROUND;
 
-                return_msg.x = route.at(route_index).first;
-                return_msg.y = route.at(route_index).second;
-                return_msg.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 5 : 0;
-                return_msg.r = 0;
+                return_msg.position.x = route.at(route_index).first;
+                return_msg.position.y = route.at(route_index).second;
+                return_msg.position.z = (route.at(route_index).first == 0 && route.at(route_index).second == 0) ? 5 : 0;
+                return_msg.position.r = 0;
 
                 drone_commands_pub.publish(return_msg);
                 
@@ -124,7 +128,9 @@ void mapAlg::step(double sleepTime){
                     case LANDING:
                     case MAPPING_ALGORITM_MOVING:
                     case HUMAN_DETECTION_NEXT_STEP:
-                    case HUMAN_DETECTION_MOVING:
+                        case HUMAN_DETECTION_MOVING:
+                        case BACK_TO_MAPPING_ALG_MOVING:
+                        case BACK_TO_MAPPING_ALG_NEXT_STEP:
                         break;
 
                     case ON_GROUND:
@@ -259,9 +265,9 @@ void mapAlg::mapCommandsCalback(const sar_drone::directions::ConstPtr& msg){
             break;
         }
 
-        case START_COORDINATES:{
-            start_location.first = msg->Latitude;
-            start_location.first = msg->Longitude;
+        case AREA_COORDINATES:{
+        //     start_location.first = msg->coordinate.front.;
+        //     start_location.first = msg->coordinate.front().longitude;
             CreateRoute();
         }
 
@@ -290,6 +296,12 @@ void mapAlg::CreateRoute(){
         route.emplace_back(0,5);
         route.emplace_back(10,0);
         route.emplace_back(-10,-20);
+
+        // route.emplace_back(0,0);
+        // route.emplace_back(10, 10);
+        // route.emplace_back(10, -10);
+        // route.emplace_back(-10, -10);
+        // route.emplace_back(-10, 10);
         
         on_site = true;
     }

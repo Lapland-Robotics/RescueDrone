@@ -39,6 +39,9 @@ namespace SaR_Drone{
         uint8_t getFlightStatus(){return flight_status;}
         
         double angleabs(double angle){
+            if(std::abs(angle) > M_PI){
+                angle += angle > 0? (-2 * M_PI) : (2 * M_PI);
+            }
             if(std::abs(angle + M_PI) < YAW_THRESHOLD){
                 angle += (2 * M_PI);
             }

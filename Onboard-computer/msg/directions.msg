@@ -1,9 +1,4 @@
 uint8 ID
 uint8 Command
-uint8 Area_coordinates_index
-float64 Latitude
-float64 Longitude
-float32 x
-float32 y
-float32 z
-float32 r
+coordinates[] coordinate
+rel_coordinates position
