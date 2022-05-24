@@ -15,12 +15,8 @@ YDistanceB = 0
 XDistanceR = 0
 XDistanceL = 0
 PointsPL = 2 #Stops per line
-YpointsR = []
-YpointsL = []
-XpointsR = []
-XpointsL = []
-RLine = []
-LLine = []
+coordinates = []
+done = False
 
 def distancecalc():
     global EdgeBL
@@ -91,48 +87,38 @@ def routeplanner():
     global DistanceT
     global DistanceL
 
+    global coordinates
+    global done
+    distance = 0
+
+    #DistanceR = 25
+
     counter = 0
     while counter != DistanceR:
         if counter % PointsPL == 0:
-            YpointsR.append(counter)
+            if done == False:
+                coordinates.append(DistanceB)
+                coordinates.append(PointsPL)
+                distance += PointsPL
+                done = True
+            else:
+                coordinates.append(DistanceB - DistanceB - DistanceB)
+                coordinates.append(PointsPL)
+                distance += PointsPL
+                done = False
         counter += 1
 
-    if YpointsR[-1] != EdgeTR[1]:
-        YpointsR.append(EdgeTR[1])
-        XpointsR.append(EdgeBR[0])
-        
-    counter = 0
-    while counter != DistanceR:
-        if counter % PointsPL == 0:
-            XpointsR.append(EdgeBR[0])
-        counter += 1
+    if distance != DistanceR:
+        if coordinates[-2] < 0:
+            coordinates.append(DistanceB)
+            coordinates.append(PointsPL)
+        else:
+            coordinates.append(DistanceB - DistanceB - DistanceB)
+            coordinates.append(PointsPL)
+            distance += PointsPL
 
-
-    counter = 0
-    while counter != DistanceL:
-        if counter % PointsPL == 0:
-            YpointsL.append(counter)
-        counter += 1
-
-    counter = 0
-    while counter != DistanceL:
-        if counter % PointsPL == 0:
-            XpointsL.append(EdgeBL[0])
-        counter += 1
-
-    counter = 0
-    while counter != len(YpointsR):
-        RLine.append(XpointsR[counter])
-        RLine.append(YpointsR[counter])
-        counter += 1
-    print(RLine)
-
-    counter = 0
-    while counter != len(YpointsL):
-        LLine.append(XpointsL[counter])
-        LLine.append(YpointsL[counter])
-        counter += 1
-    print(LLine)
+    print(distance)
+    print(coordinates)
 
 
 if _name=='main_':
