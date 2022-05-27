@@ -50,7 +50,7 @@ NextStep = 5
 
 AIDone = False #30 sec timer for human recognition
 personDetected = False #Variable to check if a human has been found inside the time of the AIDone
-needToRun = False #Command to rerun the program after it has found a person
+needToRun = True #Command to rerun the program after it has found a person
 needData = False #Command to receive from the drone in order to determine if it wants data
 #display = jetson.utils.glDisplay()
 
@@ -59,6 +59,33 @@ servo = 32 #GPIO pin
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(servo, GPIO.OUT)
 p=GPIO.PWM(servo,50) # 50hz frequency
+
+def gstreamer_pipeline(
+    sensor_id=0,
+    capture_width=1920,
+    capture_height=1080,
+    display_width=960,
+    display_height=540,
+    framerate=30,
+    flip_method=0,
+):
+    return (
+        "nvarguscamerasrc sensor-id=%d !"
+        "video/x-raw(memory:NVMM), width=(int)%d, height=(int)%d, framerate=(fraction)%d/1 ! "
+        "nvvidconv flip-method=%d ! "
+        "video/x-raw, width=(int)%d, height=(int)%d, format=(string)BGRx ! "
+        "videoconvert ! "
+        "video/x-raw, format=(string)BGR ! appsink"
+        % (
+            sensor_id,
+            capture_width,
+            capture_height,
+            framerate,
+            flip_method,
+            display_width,
+            display_height,
+        )
+    )
 
 def signal_handler(signal, frame):
   print("got sigint interupt")
@@ -189,7 +216,7 @@ def ircam():
         print("uvc_start_streaming failed: {0}".format(res))
         exit(1)
 
-      print("Body temperature detection starts now.")
+      print("Body temperature detection starts now. but why?")
       # talker(StartIR) #Bodytemp detection starts now
 
 
@@ -236,8 +263,8 @@ def ircam():
             counter = 0 #Reset counter for next frame
             data = cv2.resize(data[:,:], (640, 480))
             img = raw_to_8bit(data)
-            #cv2.imshow('Body temperature detection', img)
-            #cv2.waitKey(1)
+            cv2.imshow('Body temperature detection', img)
+            cv2.waitKey(1)
               
             if (counterC >= 50):
               talkerPRIO(BodyTempDS) #bodytemp detection succeeded
@@ -283,6 +310,7 @@ def ircam():
     libuvc.uvc_exit(ctx)
 
 def AI():
+  window_title = "CSI Camera"
   #loading the detection model with a default treshold of 50 percent 
   #Decreasing the treshold will result in detecting more objects while increasing the treshold will result in detecting less objects
   #Use SSD-MobileNet-V2 for object detection, it has 91 different objects
@@ -291,7 +319,9 @@ def AI():
   #Importing the camera stream
   #camera = jetson.utils.gstCamera(2560, 720, "/dev/video0") #ZED camera
   global display
-  camera = jetson.utils.gstCamera(1920, 1080, "0") #RPI Cam
+  # camera = jetson.utils.gstCamera(1920, 1080, "0") #RPI Cam
+  
+  video_capture = cv2.VideoCapture(gstreamer_pipeline(flip_method=2), cv2.CAP_GSTREAMER)
   detects = 0
   #talker(HumanDs) #human detection starts
   print("human detection starts now.")
@@ -303,60 +333,73 @@ def AI():
   timer.start()
 
   servo(4)
-
-  while not(AIDone) and not personDetected:
-    img, width, height = camera.CaptureRGBA()
-    detections = net.Detect(img, width, height)
-    #display.RenderOnce(img, width, height)
-    #display.SetTitle("Search and Rescue Drone Advanced Detection System | Framerate {:.0f} FPS".format(net.GetNetworkFPS()))
-    for detect in detections:
-      ID = detect.ClassID
-      item = net.GetClassDesc(ID)
-      center = detect.Center
-      if (0 < center[0] < 641) and (720 < center[1] < 1081): #bottom left
-        if needData == True:
-          talker(HumanBL)
-        detects = detects + 1
-      elif (640 < center[0] < 1281) and (720 < center[1] < 1081): #bottom mid
-        if needData == True:
-          talker(HumanBC)
-        detects = detects + 1
-      elif (1280 < center[0] < 1921) and (720 < center[1] < 1081): #bottom right
-        if needData == True:
-          talker(HumanBR)
-        detects = detects + 1
-      elif (0 < center[0] < 641) and (360 < center[1] < 721): #mid left
-        if needData == True:
-          talker(HumanCL)
-        detects = detects + 1
-      elif (640 < center[0] < 1281) and (360 < center[1] < 721): #mid
-        #if needData == True:
-          #talker(HumanCC)
-        detects = detects + 1
-      elif (1280 < center[0] < 1921) and (360 < center[1] < 721): #mid right
-        if needData == True:
-          talker(HumanCR)
-        detects = detects + 1
-      elif (0 < center[0] < 641) and (0 < center[1] < 361): #top left
-        if needData == True:
-          talker(HumanTL)
-        detects = detects + 1
-      elif (640 < center[0] < 1281) and (0 < center[1] < 361): #top mid
-        if needData == True:
-          talker(HumanTC)
-        detects = detects + 1
-      elif (1280 < center[0] < 1921) and (0 < center[1] < 361): #top right
-        if needData == True:
-          talker(HumanTR)
-        detects = detects + 1
+  try:
+    window_handle = cv2.namedWindow(window_title, cv2.WINDOW_AUTOSIZE)  
+    while not(AIDone) and not personDetected and video_capture.isOpened():
+      
+      # img, width, height = camera.CaptureRGBA()
+      ret_val, frame = video_capture.read()
+      # print (frame)
+      # detections = net.Detect(img, width, height)
+      detections = [{'Center' : [0,0]}]
+      if cv2.getWindowProperty(window_title, cv2.WND_PROP_AUTOSIZE) >= 0:
+        cv2.imshow(window_title, frame)
       else:
-        #talker(HumanNF) #no human, detection resets
-        detects = 0
-
-      #print(detects)
-      if detects == 250: 
-        personDetected = True
-
+        break 
+      keyCode = cv2.waitKey(10) & 0xFF
+      # Stop the program on the ESC key or 'q'
+      if keyCode == 27 or keyCode == ord('q'):
+        break
+      #display.RenderOnce(img, width, height)
+      #display.SetTitle("Search and Rescue Drone Advanced Detection System | Framerate {:.0f} FPS".format(net.GetNetworkFPS()))
+      for detect in detections:
+        # center = detect.Center
+        center = detect['Center']
+        if (0 < center[0] < 641) and (720 < center[1] < 1081): #bottom left
+          if needData == True:
+            talker(HumanBL)
+          detects = detects + 1
+        elif (640 < center[0] < 1281) and (720 < center[1] < 1081): #bottom mid
+          if needData == True:
+            talker(HumanBC)
+          detects = detects + 1
+        elif (1280 < center[0] < 1921) and (720 < center[1] < 1081): #bottom right
+          if needData == True:
+            talker(HumanBR)
+          detects = detects + 1
+        elif (0 < center[0] < 641) and (360 < center[1] < 721): #mid left
+          if needData == True:
+            talker(HumanCL)
+          detects = detects + 1
+        elif (640 < center[0] < 1281) and (360 < center[1] < 721): #mid
+          #if needData == True:
+            #talker(HumanCC)
+          detects = detects + 1
+        elif (1280 < center[0] < 1921) and (360 < center[1] < 721): #mid right
+          if needData == True:
+            talker(HumanCR)
+          detects = detects + 1
+        elif (0 < center[0] < 641) and (0 < center[1] < 361): #top left
+          if needData == True:
+            talker(HumanTL)
+          detects = detects + 1
+        elif (640 < center[0] < 1281) and (0 < center[1] < 361): #top mid
+          if needData == True:
+            talker(HumanTC)
+          detects = detects + 1
+        elif (1280 < center[0] < 1921) and (0 < center[1] < 361): #top right
+          if needData == True:
+            talker(HumanTR)
+          detects = detects + 1
+        else:
+          #talker(HumanNF) #no human, detection resets
+          detects = 0
+   
+        #print(detects)
+        if detects == 250: 
+          personDetected = True
+  finally:
+    video_capture.release()
   servo(8)
 
 if __name__ == '__main__':

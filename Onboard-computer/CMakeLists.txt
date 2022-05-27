@@ -69,6 +69,10 @@ generate_messages(
   std_msgs 
 )
 
+catkin_install_python(PROGRAMS scripts/human_detection.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 ###################################
 ## catkin specific configuration ##
 ###################################
