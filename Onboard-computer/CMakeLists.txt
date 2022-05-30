@@ -63,6 +63,12 @@ add_message_files(
   send_mobile.msg
 )
 
+## Generate services in the 'svg' folder
+add_service_files(
+  FILES
+  routeplanner.srv
+)
+
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
@@ -106,44 +112,43 @@ include_directories(
 )
 
 ## Declare a C++ library
-set(pkg_parrent_classes ParrentDroneClass)
+set(pkg_parrent_class ParrentDroneClass)
+set(pkg_position_class PositionClass)
 
-add_library(ParrentDroneClass
+add_library(${pkg_parrent_class}
   src/class_files/ParrentDroneClass.cpp
 )
 
-target_link_libraries(ParrentDroneClass ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES})
+target_link_libraries(${pkg_parrent_class} ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES})
+
+add_library(${pkg_position_class}
+  src/class_files/Position.cpp
+)
+
+target_link_libraries(${pkg_position_class} ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_class})
 
 add_library(ControlleDrone
   src/class_files/ControlleDrone.cpp
 )
 
-target_link_libraries(ControlleDrone ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_classes})
+target_link_libraries(ControlleDrone ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_class} ${pkg_parrent_class} ${pkg_position_class})
 
 add_library(SendReceveDataMSDK
   src/class_files/SendReceveDataMSDK.cpp
 )
 
-target_link_libraries(SendReceveDataMSDK ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_classes})
-
-
-add_library(Position
-  src/class_files/Position.cpp
-)
-
-target_link_libraries(Position ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_classes})
+target_link_libraries(SendReceveDataMSDK ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_class})
 
 add_library(mappAlgClass
   src/class_files/mapAlg.cpp
 )
 
-target_link_libraries(mappAlgClass ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_classes})
+target_link_libraries(mappAlgClass ${catkin_LIBRARIES} ${DJIOSDK_LIBRARIES} ${pkg_parrent_class} ${pkg_position_class})
 
 
 set(pkg_libs
     ControlleDrone
     SendReceveDataMSDK
-    Position
     mappAlgClass
 )
 

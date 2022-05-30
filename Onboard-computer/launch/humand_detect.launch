@@ -1,0 +1,6 @@
+<launch>
+    <arg name="show_disp" default="False"/>
+	<node pkg="sar_drone" type="human_detection.py" name="human_detections" respawn="true" output="screen">
+        <param name="show_display" value="$(arg show_disp)"/> 
+    </node>
+</launch>

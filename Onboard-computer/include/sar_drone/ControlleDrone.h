@@ -56,7 +56,6 @@ namespace SaR_Drone{
 
         float getDirectionAngle(float x, float y);
         std::pair<float, float> remapDirections(float x, float y, float r);
-        geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print = false);
 
         ServiceAck obtainCtrlAuthority();
         ServiceAck releaseControle();

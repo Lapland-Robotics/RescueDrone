@@ -761,29 +761,6 @@ std::pair<float, float> ControlleDrone::remapDirections(float x, float y, float 
     }
 }
 
-geometry_msgs::Point ControlleDrone::translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print){
-    if(debug_print){ROS_INFO_STREAM("\nCORX: " << origin.longitude << "\tCORY: " << origin.latitude << "\nCOFX: " << offset.longitude << "\tCOFY: " << offset.latitude);}
-    origin.longitude = origin.longitude * M_PI / 180;
-    origin.latitude = origin.latitude * M_PI / 180;
-    offset.longitude = offset.longitude * M_PI / 180;
-    offset.latitude = offset.latitude * M_PI / 180;
-
-    long double distance = std::abs(RADIUS_EARTH * acos((sin(origin.latitude) * sin(offset.latitude)) + (cos(origin.latitude) * cos(offset.latitude) * cos(origin.longitude - offset.longitude))));
-
-    long double phi = cos(origin.latitude) * sin(offset.latitude) - sin(origin.latitude) * cos(offset.latitude) * cos(offset.longitude - origin.longitude);
-    long double lon = sin(offset.longitude - origin.longitude) * cos(offset.latitude);
-    long double heading = atan2(lon, phi);
-    
-    geometry_msgs::Point tmp;
-    tmp.x = cos(heading) * distance;
-    tmp.y = sin(heading) * distance;
-    tmp.z = offset.altitude - home_altitude;
-
-    if(debug_print){ROS_INFO_STREAM("dis: " << distance << "\thead: " << heading << "\nx: " << tmp.x << "\ty: " << tmp.y);}
-
-    return tmp;
-}
-
 ParrentDroneClass::ServiceAck ControlleDrone::obtainCtrlAuthority(){
   dji_sdk::SDKControlAuthority sdkAuthority;
   sdkAuthority.request.control_enable = 1;
@@ -808,7 +785,7 @@ ParrentDroneClass::ServiceAck ControlleDrone::releaseControle(){
 
 bool ControlleDrone::takeoff(){
     home_altitude = getGPS().altitude;
-    
+    setHomeAltitude(home_altitude);
     uint8_t count = 0;
     while(count != 12){
         if(takeoff_land(dji_sdk::DroneTaskControl::Request::TASK_TAKEOFF)){

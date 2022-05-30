@@ -1,0 +1,7 @@
+rel_coordinates BL
+rel_coordinates BR
+rel_coordinates TL
+rel_coordinates TR
+uint8 Closest #1 = BL & 2 = BR & 3 = TL & 4 = TR
+---
+rel_coordinates[] route

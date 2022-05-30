@@ -100,6 +100,16 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
             break;
         }
 
+        case TAKE_OFF:{
+            ROS_INFO_STREAM("Got TAKE_OFF search from MSDK");
+
+            sar_drone::directions msg;
+            msg.ID = msg_ID;
+            msg.Command = TAKE_OFF;
+            map_commands_pub.publish(msg);
+            break;
+        }
+
         case START_SEARCH:{
             ROS_INFO_STREAM("Got start search from MSDK");
 

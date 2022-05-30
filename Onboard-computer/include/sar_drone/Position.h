@@ -48,8 +48,13 @@ namespace SaR_Drone{
             return angle;
         }
 
+        void setHomeAltitude(float alti){home_altitude_pos = alti;}
+
+        geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print = false, bool area_corners = false);
+
     private:
         bool set_local_position();
+        float home_altitude_pos;
 
         ros::ServiceClient set_local_pos_reference;
 

@@ -8,7 +8,7 @@ int main (int argc, char ** argv)
 
     mapAlg MapAlg;
     
-    while (ros::ok()){
+    while (ros::ok() && MapAlg.isReady()){
         MapAlg.step(0.001);
     }
 
