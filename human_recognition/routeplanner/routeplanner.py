@@ -16,6 +16,7 @@ XDistanceR = 0
 XDistanceL = 0
 PointsPL = 2 #Stops per line
 coordinates = []
+placeDrone = 1
 done = False
 
 def distancecalc():
@@ -88,39 +89,127 @@ def routeplanner():
     global DistanceL
 
     global coordinates
+    global placeDrone
     global done
     distance = 0
 
     #DistanceR = 25
+    placeDrone = 4
 
-    counter = 0
-    while counter != DistanceR:
-        if counter % PointsPL == 0:
-            if done == False:
-                coordinates.append(DistanceB)
-                coordinates.append(PointsPL)
-                distance += PointsPL
-                done = True
+    if placeDrone == 1:
+        counter = 0
+        while counter != DistanceR:
+            if counter % PointsPL == 0:
+                if done == False:
+
+                    #tmp = rel_coordinates()
+                    #tmp.x = 0
+                    #tmp.y = DistanceB
+                    #coordinates.append(tmp)
+                    #tmp.x = PointsPL
+                    #tmp.y = 0
+                    #coordinates.append(tmp)
+
+                    coordinates.append([0, DistanceB])
+                    coordinates.append([PointsPL, 0])
+                    distance += PointsPL
+                    done = True
+                else:
+                    coordinates.append([0, -DistanceB])
+                    coordinates.append([PointsPL, 0])
+                    distance += PointsPL
+                    done = False
+            counter += 1
+
+        if distance != DistanceR:
+            if coordinates[-2] < 0:
+                coordinates.append([0, DistanceB])
+                coordinates.append([PointsPL, 0])
             else:
-                coordinates.append(DistanceB - DistanceB - DistanceB)
-                coordinates.append(PointsPL)
+                coordinates.append([0, -DistanceB])
+                coordinates.append([PointsPL, 0])
                 distance += PointsPL
-                done = False
-        counter += 1
+        print(coordinates)
+    elif placeDrone == 2:
+        counter = 0
+        while counter != DistanceR:
+            if counter % PointsPL == 0:
+                if done == False:
+                    coordinates.append([0, -DistanceB])
+                    coordinates.append([PointsPL, 0])
+                    distance += PointsPL
+                    done = True
+                else:
+                    coordinates.append([0, DistanceB])
+                    coordinates.append([PointsPL, 0])
+                    distance += PointsPL
+                    done = False
+            counter += 1
 
-    if distance != DistanceR:
-        if coordinates[-2] < 0:
-            coordinates.append(DistanceB)
-            coordinates.append(PointsPL)
-        else:
-            coordinates.append(DistanceB - DistanceB - DistanceB)
-            coordinates.append(PointsPL)
-            distance += PointsPL
+        if distance != DistanceR:
+            if coordinates[-2] < 0:
+                coordinates.append([0, DistanceB])
+                coordinates.append([PointsPL, 0])
+            else:
+                coordinates.append([0, -DistanceB])
+                coordinates.append([PointsPL, 0])
+                distance += PointsPL
+        print(coordinates)
 
-    print(distance)
-    print(coordinates)
+    elif placeDrone == 3:
+        counter = 0
+        while counter != DistanceR:
+            if counter % PointsPL == 0:
+                if done == False:
+                    coordinates.append([0, DistanceB])
+                    coordinates.append([-PointsPL, 0])
+                    distance += PointsPL
+                    done = True
+                else:
+                    coordinates.append([0, -DistanceB])
+                    coordinates.append([-PointsPL, 0])
+                    distance += PointsPL
+                    done = False
+            counter += 1
+
+        if distance != DistanceR:
+            if coordinates[-2] < 0:
+                coordinates.append([0, DistanceB])
+                coordinates.append([-PointsPL, 0])
+            else:
+                coordinates.append([0, -DistanceB])
+                coordinates.append([-PointsPL, 0])
+                distance += PointsPL
+        print(coordinates)
+    elif placeDrone == 4:
+        counter = 0
+        while counter != DistanceR:
+            if counter % PointsPL == 0:
+                if done == False:
+                    coordinates.append([0, -DistanceB])
+                    coordinates.append([-PointsPL, 0])
+                    distance += PointsPL
+                    done = True
+                else:
+                    coordinates.append([0, DistanceB])
+                    coordinates.append([-PointsPL, 0])
+                    distance += PointsPL
+                    done = False
+            counter += 1
+
+        if distance != DistanceR:
+            if coordinates[-2] < 0:
+                coordinates.append([0, -DistanceB])
+                coordinates.append([-PointsPL, 0])
+            else:
+                coordinates.append([0, DistanceB])
+                coordinates.append([-PointsPL, 0])
+                distance += PointsPL
+        print(coordinates)
+    else:
+        print("Oops.. Something went wrong")
 
 
-if _name=='main_':
+if _name_ == '_main_':
     distancecalc()
     routeplanner()
