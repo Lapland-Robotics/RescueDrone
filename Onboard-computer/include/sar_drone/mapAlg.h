@@ -34,7 +34,7 @@ namespace SaR_Drone{
         };
         
         struct AreaStruct{
-            geometry_msgs::Point Point;
+            sar_drone::rel_coordinates Point;
             corners corner = I_AM_A_CICLE;
             bool smallest = false;
         };
@@ -42,7 +42,8 @@ namespace SaR_Drone{
     private:
         void mapCommandsCalback(const sar_drone::directions::ConstPtr& msg);
         void CreateRoute(const std::vector<sar_drone::coordinates> &area);
-        geometry_msgs::Point rotatePoint(double x, double y, double angle);
+        sar_drone::rel_coordinates rotatePoint(double x, double y, double angle);
+        sar_drone::rel_coordinates rotatePoint(sar_drone::rel_coordinates point, double angle);
 
         enum localStatus{
             OFF,
@@ -56,6 +57,9 @@ namespace SaR_Drone{
             WAIT_STARTING,
             WAIT_MANUAL_OVERRIDE,
             WAIT_HUMAN_DETECTION,
+            RTH_MSG,
+            WAIT_RTH,
+            RTH,
             STOPPING,
             STOP_NOW,
         };
@@ -75,10 +79,10 @@ namespace SaR_Drone{
         ros::Time start_time;
         ros::Duration elapsed_time;
 
-        std::vector<std::pair<float, float>> route;
+        std::vector<sar_drone::rel_coordinates> route;
         
-        sensor_msgs::NavSatFix start_location; //first = lat, second = long
-        sensor_msgs::NavSatFix home_base;
+        sar_drone::coordinates start_location; //first = lat, second = long
+        sar_drone::coordinates home_base;
         sensor_msgs::NavSatFix fake_origin;
 
         ros::Subscriber map_commands_sub;
@@ -87,6 +91,8 @@ namespace SaR_Drone{
         ros::Publisher drone_commands_pub;
         ros::Publisher drone_PRIO_commands_pub;
         ros::Publisher send_mobile_data_pub;
+
+        ros::ServiceClient route_planner;
     };
 
     std::ostream& operator<<(std::ostream& os, const mapAlg::corners& data)
@@ -109,7 +115,7 @@ namespace SaR_Drone{
 
     std::ostream& operator<<(std::ostream& os, const mapAlg::AreaStruct& data)
     {
-        return os << std::setprecision(4) << (data.smallest ? "\e[0;32m" : "\e[0m") << data.corner << ": {\"x\" = " << data.Point.x << ", \"y\" = " << data.Point.y << ", \"distance to origin\" = " << data.Point.z << "}";
+        return os << std::setprecision(4) << (data.smallest ? "\e[0;32m" : "\e[0m") << data.corner << ": {\"x\" = " << data.Point.x << ", \"y\" = " << data.Point.y << ", \"distance to origin\" = " << data.Point.z << "}\e[0m";
     }
 
     std::ostream& operator<<(std::ostream& os, const std::vector<mapAlg::AreaStruct> &data)
@@ -118,6 +124,26 @@ namespace SaR_Drone{
         for(auto &i : data){
             os << i << "\n";
         }
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const sar_drone::rel_coordinates &data)
+    {
+        return os << "{\"x\" = " << data.x << ", \"y\" = " << data.y << ", \"z\" = " << data.z << ", \"r\" = " << data.r;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const std::vector<sar_drone::rel_coordinates> &data)
+    {
+        for(auto &i : data){
+            os << i << "\n";
+        }
+        return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const sar_drone::routeplanner &data)
+    {
+        os << "Area:\nBL: " << data.request.BL << "\nBR: " << data.request.BR << "\nTR: " << data.request.TR << "\nTL: " << data.request.TL << "\n";
+        os << "the route consists of " << data.response.route.size() << " points:\n" << data.response.route;
         return os;
     }
 }

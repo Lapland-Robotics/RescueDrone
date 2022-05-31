@@ -73,3 +73,12 @@ geometry_msgs::Point Position::translateGPS(sensor_msgs::NavSatFix origin, senso
 
     return tmp;
 }
+
+sar_drone::rel_coordinates Position::translateGPSArea(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print){
+    geometry_msgs::Point tmp = translateGPS(origin, offset, debug_print, true);
+    sar_drone::rel_coordinates returnValue;
+    returnValue.x = tmp.x;
+    returnValue.y = tmp.y;
+    returnValue.z = tmp.z;
+    return returnValue;
+}

@@ -19,6 +19,8 @@
 
 #include <dji_sdk/dji_sdk.h>
 
+#include <sar_drone/rel_coordinates.h>
+
 namespace SaR_Drone{
 
     class Position: public ParrentDroneClass
@@ -51,6 +53,7 @@ namespace SaR_Drone{
         void setHomeAltitude(float alti){home_altitude_pos = alti;}
 
         geometry_msgs::Point translateGPS(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print = false, bool area_corners = false);
+        sar_drone::rel_coordinates translateGPSArea(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print = false);
 
     private:
         bool set_local_position();

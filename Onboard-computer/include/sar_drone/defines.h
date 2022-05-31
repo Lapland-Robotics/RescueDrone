@@ -6,6 +6,7 @@
 #define MAP_TOPPIC "mapAlg"
 #define STATUS_TOPPIC "status"
 #define SEND_TO_MOBILE "mobile_messages"
+#define ROUTE_PLANNER_TOPPIC "route_planner"
 
 #define SEARCH_ALTITUDE 4.0
 #define DISTANCE_SLOWER 50.0
@@ -113,6 +114,7 @@ namespace SaR_Drone{
         DRONE_ALREADY_ON_GROUND = 13,
 
         NO_INSTRUCTIONS_RECEIVED = 20,
+        I_AM_FINISHED_CAN_I_GO_HOME = 21,
 
         NOT_READY_YET = 200,
     };
