@@ -50,7 +50,7 @@ NextStep = 5
 
 AIDone = False #30 sec timer for human recognition
 personDetected = False #Variable to check if a human has been found inside the time of the AIDone
-needToRun = True #Command to rerun the program after it has found a person
+needToRun = False #Command to rerun the program after it has found a person
 needData = False #Command to receive from the drone in order to determine if it wants data
 #display = jetson.utils.glDisplay()
 
@@ -131,6 +131,7 @@ def callback(data):
     needData = True
   if (callbackData == StopHumanDetect1) or (callbackData == StopHumanDetect2):
     needToRun = False
+    cv2.destroyAllWindows()
     servo(2.5)
  
 def listener():
@@ -273,7 +274,7 @@ def ircam():
             #clear counterC for testing COMENT BEFOR USE!!!
             counterC = 0
 
-            if (show_disp):
+            if (show_disp and needToRun):
               img = cv2.resize(dataa[:,:], (640, 480))
               img = raw_to_8bit(img)
               rot = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), 180, 1.0)
@@ -316,6 +317,7 @@ def ircam():
           
           else:
             time.sleep(3)
+            cv2.destroyAllWindows()
             
         #cv2.destroyAllWindows()
       finally:

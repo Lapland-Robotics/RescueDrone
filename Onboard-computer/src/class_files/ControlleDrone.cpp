@@ -397,6 +397,9 @@ void ControlleDrone::step(double sleepTime){
                         if(std::abs(cmd.x) < SPEED_MIDDLE * 1.5 || std::abs(pos.x) < SPEED_MIDDLE * 1.5){
                             cmd.x = (std::abs(cmd.x) >= SPEED_SLOW) ? ((cmd.x > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.x;
                         }
+                        else if(searching){
+                            cmd.x = cmd.x > 0 ? SEARCH_SPEED : SEARCH_SPEED * -1;
+                        }
                         else if(std::abs(cmd.x) < SPEED_FAST * 2 || std::abs(pos.x) < SPEED_FAST * 2){
                             cmd.x = cmd.x > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
                         }
@@ -414,6 +417,9 @@ void ControlleDrone::step(double sleepTime){
                     else{
                         if(std::abs(cmd.y) < SPEED_MIDDLE * 1.5 || std::abs(pos.y) < SPEED_MIDDLE * 1.5){
                             cmd.y = (std::abs(cmd.y) >= SPEED_SLOW) ? ((cmd.y > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.y;
+                        }
+                        else if(searching){
+                            cmd.y = cmd.y > 0 ? SEARCH_SPEED : SEARCH_SPEED * -1;
                         }
                         else if(std::abs(cmd.y) < SPEED_FAST * 2 || std::abs(pos.y) < SPEED_FAST * 2){
                             cmd.y = cmd.y > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
@@ -581,6 +587,13 @@ void ControlleDrone::updateStatus(statusCodes newStatus){
             break;
     }
     
+    if(Status == 10){
+        searching = true;
+    }
+    else if (Status == 8 || Status == 9){
+        searching = false;
+    }
+
     drone_status_pub.publish(pub_msg);
 }
 

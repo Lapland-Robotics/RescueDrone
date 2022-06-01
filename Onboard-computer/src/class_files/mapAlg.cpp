@@ -259,7 +259,8 @@ void mapAlg::step(double sleepTime){
                 toMobile.errorCode = MobileErrorCodes::I_AM_COMMING_HOME;
                 send_mobile_data_pub.publish(toMobile);
 
-                local_status = STOPPING;
+                next_local_status = STOPPING;
+                local_status = MOVE_COMMAND_SEND;
 
                 break;
             }

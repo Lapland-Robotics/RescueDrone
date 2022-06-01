@@ -68,6 +68,7 @@ namespace SaR_Drone{
 
         bool flying;
         bool landing;
+        bool searching;
         bool gotCtrlAuthority;
         float home_altitude;
         double XYratio;
