@@ -25,6 +25,10 @@ public class sound_timer {
         mp = MediaPlayer.create(ctx, sound);
     }
 
+    public void playOnce(){
+        mp.start();
+    }
+
     public void startTimer(long period){
         if(!playing) {
             tm = new Timer();

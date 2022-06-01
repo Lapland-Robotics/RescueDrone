@@ -154,6 +154,7 @@ class LiveMapClass {
                     iconSize(0.05)
                     iconRotationAlignment(IconRotationAlignment.MAP)
                     iconRotate(rot)
+                    iconAllowOverlap(true)
                 })
             }
             else if(needRotUpdated){

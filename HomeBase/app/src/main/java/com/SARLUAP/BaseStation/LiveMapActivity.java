@@ -18,7 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import dji.common.error.DJIError;
 import dji.common.flightcontroller.LocationCoordinate3D;
 import dji.common.util.CommonCallbacks;
 import dji.sdk.base.BaseProduct;
@@ -27,7 +26,7 @@ import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.remotecontroller.RemoteController;
 
 
-public class LiveMapActivity extends AppCompatActivity implements View.OnClickListener{
+public class LiveMapActivity extends AppCompatActivity implements View.OnClickListener, View.OnLongClickListener{
 
     private LiveMapClass liveMapClass;
 
@@ -35,9 +34,7 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     private Button btnTrack;
     private Button btnStartSearch;
     private Button btnForceStop;
-    private Button btnStartCoordinates;
     private Button btnSendArea;
-    private Button btnRemoveArea;
 
     private TextView tvDroneBat;
     private TextView tvConBat;
@@ -51,16 +48,19 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     private sound_timer beep;
     private sound_timer battery;
     private sound_timer found_person;
+    private sound_timer RTH;
 
     private long updateTime = 0;
     private static final long updateFrequency = 40;
     private static boolean updatingDrone = false;
 
     private AtomicBoolean error = new AtomicBoolean(false);
-    private AtomicBoolean nextAreaCoordinate = new AtomicBoolean(false);
 
     private List<Point> area;
     private int counter;
+
+    private boolean start_search;
+    private boolean got_long_press;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,10 +75,14 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         beep = new sound_timer();
         battery = new sound_timer();
         found_person = new sound_timer();
+        RTH = new sound_timer();
 
         beep.initSound(this, R.raw.one_beep);
         battery.initSound(this, R.raw.one_battery_warning);
         found_person.initSound(this, R.raw.one_found_person);
+        RTH.initSound(this, R.raw.rth);
+
+        got_long_press = false;
     }
 
     @Override
@@ -116,18 +120,17 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
         btnBack = findViewById(R.id.btn_back);
         btnTrack = findViewById(R.id.btn_position_tracking);
         btnStartSearch = findViewById(R.id.btn_start_search);
-        btnForceStop = findViewById(R.id.btn_force_Stop);
-        btnStartCoordinates = findViewById(R.id.btn_send_area);
+        btnForceStop = findViewById(R.id.btn_stop_searching);
         btnSendArea = findViewById(R.id.btn_remove_last);
-        btnRemoveArea = findViewById(R.id.btn_remove_area);
 
         btnBack.setOnClickListener(this);
         btnTrack.setOnClickListener(this);
         btnStartSearch.setOnClickListener(this);
         btnForceStop.setOnClickListener(this);
-        btnStartCoordinates.setOnClickListener(this);
         btnSendArea.setOnClickListener(this);
-        btnRemoveArea.setOnClickListener(this);
+
+        btnForceStop.setOnLongClickListener(this);
+        btnSendArea.setOnLongClickListener(this);
 
         liveMapClass = new LiveMapClass();
         liveMapClass.mapInit(this, findViewById(R.id.map_view), btnTrack);
@@ -159,6 +162,9 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                     CustomFun.showToast("ERROR: received nothing", getApplicationContext());
                 }
                 else {
+                    byte[] sendData = {(byte) 255};
+                    mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+
                     //showToast("length: " + bytes.length + " data: " + Arrays.toString(bytes));
                     switch (Byte.toUnsignedInt(bytes[1])){
                         case 0:
@@ -188,8 +194,21 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                                 case 22:
 //                                    CustomFun.showToast("yes" + counter, getApplicationContext());
                                     if(abs(toDouble(Arrays.copyOfRange(bytes, 2, 10)) - area.get(counter).latitude()) < 0.002 && abs(toDouble(Arrays.copyOfRange(bytes, 10, 18)) - area.get(counter).longitude()) < 0.002){
-                                        counter ++;
-                                        nextAreaCoordinate.set(true);
+                                        if(!error.get()){
+                                            counter ++;
+                                            if(counter < area.size()) {
+                                                mFlightCon.sendDataToOnboardSDKDevice(encodeData(area.get(counter).latitude(), area.get(counter).longitude(), (byte) 22), tmp);
+                                            }
+                                            else{
+                                                sendData = new byte[]{(byte) 23};
+                                                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+                                                MainActivity.inSearch = true;
+                                                CustomFun.showToast("successful sent area", getApplicationContext());
+                                            }
+                                        }
+                                        else{
+                                            CustomFun.showToast("error with sending area", getApplicationContext());
+                                        }
                                     }
                                     else{
                                         error.set(true);
@@ -216,6 +235,19 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                             beep.startTimer(200);
                             break;
 
+                        case 4:
+                            CustomFun.showToast("Take off in progress", getApplicationContext());
+                            if(beep.isPlaying()){
+                                beep.stopTimer();
+                            }
+                            beep.startTimer(1000);
+
+                            if(start_search){
+                                counter = 0;
+                                mFlightCon.sendDataToOnboardSDKDevice(encodeData(area.get(counter).latitude(), area.get(counter).longitude(), (byte) 22), tmp);
+                            }
+                            break;
+
                         case 10:
                             CustomFun.showToast("error with takeoff", getApplicationContext());
                             beep.stopTimer();
@@ -240,15 +272,17 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
                             CustomFun.showToast("maybe give me some instructions???", getApplicationContext());
                             break;
 
-                        case 22:
-                            CustomFun.showToast("Onboard computer has some problems with the area coordinate", getApplicationContext());
+                        case 21:
+                            CustomFun.showToast("I'm done can i come home?", getApplicationContext());
                             break;
 
+                        case 25:
+                            CustomFun.showToast("I'm coming home tonight Meet me in the valley where the kids collide", getApplicationContext());
+                            RTH.playOnce();
+                            btnForceStop.setText("cancel RTH");
+                            break;
                     }
                 }
-
-                byte[] sendData = {(byte) 255};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
             });
 
             mFlightCon.setStateCallback(flightControllerState -> {
@@ -297,72 +331,75 @@ public class LiveMapActivity extends AppCompatActivity implements View.OnClickLi
     @SuppressLint({"NonConstantResourceId", "SetTextI18n"})
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+        if(!got_long_press){
+            switch (v.getId()) {
 
-            case R.id.btn_back: {
-                finish();
-                break;
-            }
-
-            case R.id.btn_position_tracking:{
-                if (liveMapClass.getPosTrackingON()) {
-                    liveMapClass.dismissedCameraTracking();
-                } else {
-                    liveMapClass.activateCameraTrackingActivate();
-                }
-                break;
-            }
-
-            case R.id.btn_start_search:{
-                byte[] sendData = {(byte) 20};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
-                MainActivity.inSearch = true;
-                if(!beep.isPlaying()) {
-                    beep.startTimer(1000);
+                case R.id.btn_back: {
+                    finish();
+                    break;
                 }
 
-                break;
-            }
-
-            case R.id.btn_force_Stop:{
-                byte[] sendData = {(byte) 21};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
-                break;
-            }
-
-            case R.id.btn_remove_last:{
-                liveMapClass.removeLastPoint();
-                break;
-            }
-
-            case R.id.btn_send_area:{
-                counter = 0;
-                area = liveMapClass.getArea();
-
-                error.set(false);
-                nextAreaCoordinate.set(true);
-
-                while(!error.get() && counter < area.size()){
-                    if(nextAreaCoordinate.get()) {
-                        nextAreaCoordinate.set(false);
-                        mFlightCon.sendDataToOnboardSDKDevice(encodeData(area.get(counter).latitude(), area.get(counter).longitude(), (byte) 22), tmp);
+                case R.id.btn_position_tracking:{
+                    if (liveMapClass.getPosTrackingON()) {
+                        liveMapClass.dismissedCameraTracking();
+                    } else {
+                        liveMapClass.activateCameraTrackingActivate();
                     }
+                    break;
                 }
 
-                byte[] sendData = {(byte) 23};
-                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+                case R.id.btn_start_search:{
+                    area = liveMapClass.getArea();
 
-                CustomFun.showToast(error.get() ? "error with sending area" : "area successfully send", getApplicationContext());
-                break;
+                    if(area.size() != 4){
+                        CustomFun.showToast(area.size() < 3 ? "What do you want to do? you didn't select a big enough area" : "sorry i'm too stupid to do an area that has no four corners", getApplicationContext());
+                        break;
+                    }
+
+                    error.set(false);
+                    start_search = true;
+
+                    byte[] sendData = {(byte) 20};
+                    mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+                    break;
+                }
+
+                case R.id.btn_stop_searching:{
+                    byte[] sendData = {(byte) 21};
+                    mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+                    break;
+                }
+
+                case R.id.btn_remove_last:{
+                    liveMapClass.removeLastPoint();
+                    break;
+                }
+
+                default:
+                    break;
             }
-
-            case R.id.btn_remove_area:{
-                liveMapClass.removePoints();
-            }
-
-            default:
-                break;
         }
+        else{
+            got_long_press = false;
+        }
+    }
+
+    @SuppressLint("NonConstantResourceId")
+    @Override
+    public boolean onLongClick(View v) {
+        got_long_press = true;
+        switch (v.getId()){
+            case R.id.btn_stop_searching:
+                byte[] sendData = {(byte) 1};
+                mFlightCon.sendDataToOnboardSDKDevice(sendData, tmp);
+                break;
+
+            case R.id.btn_remove_last:
+                liveMapClass.removePoints();
+                break;
+
+        }
+        return false;
     }
 
     @NonNull

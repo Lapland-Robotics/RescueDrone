@@ -40,7 +40,7 @@
         android:text="@string/button_start_search" />
 
     <Button
-        android:id="@+id/btn_force_Stop"
+        android:id="@+id/btn_stop_searching"
         style="@style/common_button"
         android:layout_width="100dp"
         android:layout_marginStart="5dp"
@@ -48,22 +48,13 @@
         android:layout_toEndOf="@+id/btn_start_search"
         android:text="@string/button_force_stop" />
 
-    <Button
-        android:id="@+id/btn_send_area"
-        style="@style/common_button"
-        android:layout_width="100dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_toEndOf="@+id/btn_force_Stop"
-        android:text="@string/button_send_area" />
-
     <TextView
         android:id="@+id/tv_drone_battery_information"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="5dp"
-        android:layout_toEndOf="@+id/btn_send_area"
         android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/btn_remove_last"
         android:text="@string/unknown"
         android:textAlignment="center"
         android:textColor="@color/black"
@@ -87,17 +78,6 @@
         android:layout_width="100dp"
         android:layout_marginStart="5dp"
         android:layout_marginTop="5dp"
-        android:layout_below="@+id/btn_start_search"
-        android:layout_alignStart="@id/tv_drone_battery_information"
+        android:layout_toEndOf="@id/btn_stop_searching"
         android:text="@string/button_remove_last" />
-
-    <Button
-        android:id="@+id/btn_remove_area"
-        style="@style/common_button"
-        android:layout_width="100dp"
-        android:layout_marginStart="5dp"
-        android:layout_marginTop="5dp"
-        android:layout_below="@+id/btn_force_Stop"
-        android:layout_alignStart="@id/tv_controller_battery_information"
-        android:text="@string/button_remove_area" />
 </RelativeLayout>
