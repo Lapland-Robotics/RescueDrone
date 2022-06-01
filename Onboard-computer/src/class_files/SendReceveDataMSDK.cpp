@@ -73,16 +73,16 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
     switch (cmdID)
     {
         case EMERGENCY_SHUTDOWN: {
-            ROS_INFO_STREAM("Got Emergency shutdown from MSDK");
+            ROS_WARN_STREAM("Got Emergency shutdown from MSDK");
             break;
         }
 
         case EMERGENCY_LAND:{
-            ROS_INFO_STREAM("Got land from MSDK");
+            ROS_WARN_STREAM("Got land from MSDK");
 
             sar_drone::directions msg;
             msg.ID = msg_ID;
-            msg.Command = EMERGENCY_LAND;
+            msg.Command = LAND;
             drone_PRIO_commands_pub.publish(msg);
             map_commands_pub.publish(msg);
 
@@ -90,7 +90,7 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
         }
 
         case MANUAL_OVERRIDE:{
-            ROS_INFO_STREAM("got manual override from MSDK");
+            ROS_WARN_STREAM("got manual override from MSDK");
 
             sar_drone::directions msg;
             msg.ID = msg_ID;
@@ -101,7 +101,7 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
         }
 
         case TAKE_OFF:{
-            ROS_INFO_STREAM("Got TAKE_OFF search from MSDK");
+            ROS_WARN_STREAM("Got TAKE_OFF search from MSDK");
 
             sar_drone::directions msg;
             msg.ID = msg_ID;
@@ -111,18 +111,18 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
         }
 
         case START_SEARCH:{
-            ROS_INFO_STREAM("Got start search from MSDK");
+            ROS_WARN_STREAM("Got start search from MSDK");
 
             sar_drone::directions msg;
             msg.ID = msg_ID;
-            msg.Command = START_SEARCH;
+            msg.Command = TAKE_OFF;
             map_commands_pub.publish(msg);
 
             break;
         }
 
         case STOP_SEARCH:{
-            ROS_INFO_STREAM("Got stop search from MSDK");
+            ROS_WARN_STREAM("Got stop search from MSDK");
 
             sar_drone::directions msg;
             msg.ID = msg_ID;
@@ -133,7 +133,7 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
         }
 
         case AREA_COORDINATES:{
-            ROS_INFO_STREAM("Got area coordinates from MSDK");
+            ROS_WARN_STREAM("Got area coordinates from MSDK");
 
             ROS_WARN_STREAM("Latitude: " << std::fixed << std::setprecision(10) << MobileReseive.Latitude << "\tLongitude: " << MobileReseive.Longitude);
             
@@ -151,7 +151,18 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
             MobileSend.errorCode = NO_ERROR;
             MobileSend.Latitude = area.back().latitude;
             MobileSend.Longitude = area.back().longitude;
-            sendToMobile(MobileSend);
+            
+            ros::Time start_time = ros::Time::now();
+            ros::Duration elapsed_time;
+            MobileReceiveCalback = false;
+            while(!MobileReceiveCalback){
+                elapsed_time = ros::Time::now() - start_time;
+                if(elapsed_time > ros::Duration(0.2)){
+                    sendToMobile(MobileSend);
+                    start_time = ros::Time::now();
+                }
+                else spin(0.01);
+            }
             break;
         }
 
@@ -167,6 +178,7 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
                 ROS_WARN_STREAM(i);
             }
             gotArea = true;
+            break;
         }
 
         case ARE_YOU_ALIVE:{
@@ -180,10 +192,11 @@ void SendReceveDataMSDK::fromMobileDataSubscriberCallback(const dji_sdk::MobileD
 
         case MOBILE_RECEIVE_CALLBACK:{
             MobileReceiveCalback = true;
+            break;
         }
 
         default:{
-            ROS_INFO_STREAM("Does not know this command (" <<(int) cmdID << ")");
+            ROS_WARN_STREAM("Does not know this command (" <<(int) cmdID << ")");
             break;
         }
     }

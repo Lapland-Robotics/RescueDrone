@@ -9,7 +9,8 @@
 #define ROUTE_PLANNER_TOPPIC "route_planner"
 
 #define SEARCH_ALTITUDE 4.0
-#define DISTANCE_SLOWER 50.0
+#define SEARCH_SPEED 2.0
+#define DISTANCE_SLOWER 75.0
 #define SPEED_MAX 30.0
 #define SPEED_FAST 5.0
 #define SPEED_MIDDLE 2.0
@@ -35,6 +36,7 @@ namespace SaR_Drone{
         //Primary function commands
         TAKE_OFF = 10,
         LAND = 11,
+        RTH = 12,
 
         //MSDK -> mapping alg commands
         START_SEARCH = 20,
@@ -45,7 +47,7 @@ namespace SaR_Drone{
         DEMO = 30,
 
         //mapping alg -> controll drone commands
-        
+        MA_STOP_HUMAN_DETECT = 43,
         MA_START_HUMAN_DETECT = 44,
         MA_MOVE_COORDINATES = 45,
         MA_MOVE_RELATIVE_GROUND_HEADLESS = 46,
@@ -89,8 +91,8 @@ namespace SaR_Drone{
 
         START_HUMAN_DETECTION = 10,
         
-        BACK_TO_MAPPING_ALG_MOVING = 11,
-        BACK_TO_MAPPING_ALG_NEXT_STEP = 12,
+        BACK_TO_MAPPING_ALG_MOVING = 15,
+        BACK_TO_MAPPING_ALG_NEXT_STEP = 16,
 
         MAPPING_ALGORITM_DIDNT_FINISH_MOVE = 40,
 
@@ -107,6 +109,7 @@ namespace SaR_Drone{
         NO_ERROR = 0,
         CANT_GIVE_MANUAL_CONTROLLE = 2,
         START_LANDING = 3,
+        START_TAKEOFF = 4,
 
         ERROR_WITH_TAKEOFF = 10,
         DRONE_ALREADY_FLYING = 12,
@@ -115,6 +118,8 @@ namespace SaR_Drone{
 
         NO_INSTRUCTIONS_RECEIVED = 20,
         I_AM_FINISHED_CAN_I_GO_HOME = 21,
+
+        I_AM_COMMING_HOME = 25,
 
         NOT_READY_YET = 200,
     };

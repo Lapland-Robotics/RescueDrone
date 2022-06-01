@@ -50,7 +50,7 @@ NextStep = 5
 
 AIDone = False #30 sec timer for human recognition
 personDetected = False #Variable to check if a human has been found inside the time of the AIDone
-needToRun = True #Command to rerun the program after it has found a person
+needToRun = False #Command to rerun the program after it has found a person
 needData = False #Command to receive from the drone in order to determine if it wants data
 #display = jetson.utils.glDisplay()
 
@@ -82,6 +82,7 @@ def gstreamer_pipeline(
     )
 
 
+rospy.logwarn("initializing Human detection")
 show_disp = rospy.get_param('/human_detections/show_display')
 net = jetson.inference.detectNet("pednet", threshold=0.5)
 video_capture = cv2.VideoCapture(gstreamer_pipeline(flip_method=2), cv2.CAP_GSTREAMER)
@@ -93,6 +94,8 @@ p=GPIO.PWM(servo,50) # 50hz frequency
 
 def signal_handler(signal, frame):
   print("got sigint interupt")
+  p.stop()
+  GPIO.cleanup()
   sys.exit(0)
 
 def TimerCallback():
@@ -128,6 +131,7 @@ def callback(data):
     needData = True
   if (callbackData == StopHumanDetect1) or (callbackData == StopHumanDetect2):
     needToRun = False
+    cv2.destroyAllWindows()
     servo(2.5)
  
 def listener():
@@ -182,7 +186,7 @@ def ircam():
   global AIDone
   global personDetected
   global needToRun
-
+  print(show_disp)
   servo(2.5)
 
   res = libuvc.uvc_init(byref(ctx), 0)
@@ -227,6 +231,7 @@ def ircam():
       sendTempDone = False
 
       try:
+        rospy.logwarn("initializing done")
         while True:
           if needToRun:
             data = q.get(True, 500)
@@ -265,7 +270,11 @@ def ircam():
 
             #needData == False #resetting this for the next time the drone wants to receive data
             counter = 0 #Reset counter for next frae
-            if (show_disp):
+
+            #clear counterC for testing COMENT BEFOR USE!!!
+            counterC = 0
+
+            if (show_disp and needToRun):
               img = cv2.resize(dataa[:,:], (640, 480))
               img = raw_to_8bit(img)
               rot = cv2.getRotationMatrix2D((img.shape[1] // 2, img.shape[0] // 2), 180, 1.0)
@@ -306,8 +315,9 @@ def ircam():
                 needToRun = False
                 sendTempDone = False
           
-          elif (not needToRun):
+          else:
             time.sleep(3)
+            cv2.destroyAllWindows()
             
         #cv2.destroyAllWindows()
       finally:

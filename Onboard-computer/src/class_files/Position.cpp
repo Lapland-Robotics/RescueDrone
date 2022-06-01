@@ -74,7 +74,23 @@ geometry_msgs::Point Position::translateGPS(sensor_msgs::NavSatFix origin, senso
     return tmp;
 }
 
+geometry_msgs::Point Position::translateGPS(sensor_msgs::NavSatFix origin, sar_drone::coordinates offset, bool debug_print, bool area_corners){
+    sensor_msgs::NavSatFix tmp;
+    tmp.latitude = offset.latitude;
+    tmp.longitude = offset.longitude;
+
+    return translateGPS(origin, tmp, debug_print, area_corners);
+}
+
 sar_drone::rel_coordinates Position::translateGPSArea(sensor_msgs::NavSatFix origin, sensor_msgs::NavSatFix offset, bool debug_print){
+    geometry_msgs::Point tmp = translateGPS(origin, offset, debug_print, true);
+    sar_drone::rel_coordinates returnValue;
+    returnValue.x = tmp.x;
+    returnValue.y = tmp.y;
+    returnValue.z = tmp.z;
+    return returnValue;
+}
+sar_drone::rel_coordinates Position::translateGPSArea(sensor_msgs::NavSatFix origin, sar_drone::coordinates offset, bool debug_print){
     geometry_msgs::Point tmp = translateGPS(origin, offset, debug_print, true);
     sar_drone::rel_coordinates returnValue;
     returnValue.x = tmp.x;
