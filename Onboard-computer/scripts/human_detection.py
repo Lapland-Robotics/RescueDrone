@@ -82,6 +82,7 @@ def gstreamer_pipeline(
     )
 
 
+rospy.logwarn("initializing Human detection")
 show_disp = rospy.get_param('/human_detections/show_display')
 net = jetson.inference.detectNet("pednet", threshold=0.5)
 video_capture = cv2.VideoCapture(gstreamer_pipeline(flip_method=2), cv2.CAP_GSTREAMER)
@@ -93,6 +94,8 @@ p=GPIO.PWM(servo,50) # 50hz frequency
 
 def signal_handler(signal, frame):
   print("got sigint interupt")
+  p.stop()
+  GPIO.cleanup()
   sys.exit(0)
 
 def TimerCallback():
@@ -182,7 +185,7 @@ def ircam():
   global AIDone
   global personDetected
   global needToRun
-
+  print(show_disp)
   servo(2.5)
 
   res = libuvc.uvc_init(byref(ctx), 0)
@@ -227,6 +230,7 @@ def ircam():
       sendTempDone = False
 
       try:
+        rospy.logwarn("initializing done")
         while True:
           if needToRun:
             data = q.get(True, 500)
@@ -265,6 +269,10 @@ def ircam():
 
             #needData == False #resetting this for the next time the drone wants to receive data
             counter = 0 #Reset counter for next frae
+
+            #clear counterC for testing COMENT BEFOR USE!!!
+            counterC = 0
+
             if (show_disp):
               img = cv2.resize(dataa[:,:], (640, 480))
               img = raw_to_8bit(img)
@@ -306,7 +314,7 @@ def ircam():
                 needToRun = False
                 sendTempDone = False
           
-          elif (not needToRun):
+          else:
             time.sleep(3)
             
         #cv2.destroyAllWindows()

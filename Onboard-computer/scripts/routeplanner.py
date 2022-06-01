@@ -60,6 +60,7 @@ def handle_route_planner(req):
 
 def distancecalc():
     global GloReq
+    global Route
 
     global DistanceB
     global DistanceR
@@ -70,6 +71,20 @@ def distancecalc():
     global YDistanceB #Difference between the Y values between EDGEBL and EDGEBR
     global XDistanceR #Difference between the X values between EDGEBR and EDGETR
     global XDistanceL #Difference between the X values between EDGETL and EDGEBL
+
+    Start_corner_tmp = rel_coordinates()
+    if(GloReq.Closest == 1): 
+        Start_corner_tmp.x = GloReq.BL.x
+        Start_corner_tmp.y = GloReq.BL.y
+    elif(GloReq.Closest == 2):
+        Start_corner_tmp.x = GloReq.BR.x 
+        Start_corner_tmp.y = GloReq.BR.y
+    elif(GloReq.Closest == 3): 
+        Start_corner_tmp.x = GloReq.TL.x
+        Start_corner_tmp.y = GloReq.TL.y
+    elif(GloReq.Closest == 4): 
+        Start_corner_tmp.x = GloReq.TR.x
+        Start_corner_tmp.y = GloReq.TR.y
 
     GloReq.TL.y = GloReq.BL.y if GloReq.BL.y < GloReq.TL.y else GloReq.TL.y
     GloReq.BL.y = GloReq.TL.y
@@ -82,6 +97,34 @@ def distancecalc():
 
     GloReq.BL.x = GloReq.BL.x if GloReq.BL.x < GloReq.BR.x else GloReq.BR.x
     GloReq.BR.x = GloReq.BL.x
+
+    if(GloReq.Closest == 1): 
+        if(Start_corner_tmp.x != GloReq.BL.x or Start_corner_tmp.y != GloReq.BL.y):
+            tmp = rel_coordinates()
+            tmp.x = GloReq.BL.x - Start_corner_tmp.x
+            tmp.y = GloReq.BL.y - Start_corner_tmp.y
+            Route.append(tmp)
+
+    elif(GloReq.Closest == 2): 
+        if(Start_corner_tmp.x != GloReq.BR.x or Start_corner_tmp.y != GloReq.BR.y):
+            tmp = rel_coordinates()
+            tmp.x = GloReq.BR.x - Start_corner_tmp.x
+            tmp.y = GloReq.BR.y - Start_corner_tmp.y
+            Route.append(tmp)
+
+    elif(GloReq.Closest == 3): 
+        if(Start_corner_tmp.x != GloReq.TL.x or Start_corner_tmp.y != GloReq.TL.y):
+            tmp = rel_coordinates()
+            tmp.x = GloReq.TL.x - Start_corner_tmp.x
+            tmp.y = GloReq.TL.y - Start_corner_tmp.y
+            Route.append(tmp)
+
+    elif(GloReq.Closest == 4): 
+        if(Start_corner_tmp.x != GloReq.TR.x or Start_corner_tmp.y != GloReq.TR.y):
+            tmp = rel_coordinates()
+            tmp.x = GloReq.TR.x - Start_corner_tmp.x
+            tmp.y = GloReq.TR.y - Start_corner_tmp.y
+            Route.append(tmp)
     
     DistanceB = abs(GloReq.BR.y - GloReq.BL.y)
     DistanceR = abs(GloReq.TR.x - GloReq.BR.x)
@@ -169,14 +212,14 @@ if __name__ == '__main__':
     # GloReq.TR.x = 61
     # GloReq.TR.y = 66
 
-    GloReq.TR.x = -37
-    GloReq.TR.y = -25
-    GloReq.TL.x = -28
-    GloReq.TL.y = -47
-    GloReq.BR.x = -48
-    GloReq.BR.y = -28
-    GloReq.BL.x = -61
-    GloReq.BL.y = -66
+    # GloReq.TR.x = -37
+    # GloReq.TR.y = -25
+    # GloReq.TL.x = -28
+    # GloReq.TL.y = -47
+    # GloReq.BR.x = -48
+    # GloReq.BR.y = -28
+    # GloReq.BL.x = -61
+    # GloReq.BL.y = -66
 
     # GloReq.Closest = 1
 

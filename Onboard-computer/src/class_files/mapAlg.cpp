@@ -17,6 +17,8 @@ mapAlg::mapAlg(): msg_ID(2)
             status_drone = static_cast<statusCodes>(msg->Status);
             ROS_WARN_STREAM("status: " << status_drone);
         });
+
+        route_planner = nh.serviceClient<sar_drone::routeplanner>(ROUTE_PLANNER_TOPPIC);
         
         route_index = 0;
         demo = false;
@@ -68,13 +70,14 @@ void mapAlg::step(double sleepTime){
             }
 
             case GOING_TO_START:{
-                ROS_INFO_STREAM("setting home point");
+
+                ROS_WARN_STREAM("setting home point");
 
                 sensor_msgs::NavSatFix GPSTmp = getGPS();
                 home_base.latitude = GPSTmp.latitude;
                 home_base.longitude = GPSTmp.longitude;
 
-                ROS_INFO_STREAM("Go to start");
+                ROS_WARN_STREAM("Go to start");
                 
                 sar_drone::directions return_msg;
                 sar_drone::coordinates coord_msg;
@@ -87,13 +90,14 @@ void mapAlg::step(double sleepTime){
                 return_msg.coordinate.push_back(coord_msg);
                 drone_commands_pub.publish(return_msg);
 
-                next_local_status = WAIT_STARTING;
+                next_local_status = WAIT_GOIN_TO_START;
                 local_status = MOVE_COMMAND_SEND;
 
                 break;
             }
 
             case START_HUMAN:{
+                ROS_WARN_STREAM("start human detect");
                 sar_drone::directions return_msg;
                 return_msg.ID = msg_ID;
                 return_msg.Command = MA_START_HUMAN_DETECT;
@@ -112,6 +116,7 @@ void mapAlg::step(double sleepTime){
                 return_msg.Command = MA_MOVE_RELATIVE_GROUND;
 
                 return_msg.position = route[route_index];
+                return_msg.position.z = 0;
 
                 drone_commands_pub.publish(return_msg);
                 
@@ -177,12 +182,29 @@ void mapAlg::step(double sleepTime){
                 break;
             }
 
+            case WAIT_GOIN_TO_START:{
+                switch(status_drone){
+                    case MAPPING_ALGORITM_NEXT_STEP:{
+                        sar_drone::rel_coordinates tmp = translateGPSArea(getGPS(), start_location);
+                        ROS_WARN_STREAM("Am i at start? (" << tmp.x << ", " << tmp.y << ")");
+                        if(std::abs(tmp.x) < HORIZON_THRESHOLD && std::abs(tmp.y) < HORIZON_THRESHOLD){
+                            ROS_WARN_STREAM("at start point");
+                            on_site = true;
+                            local_status = START_HUMAN;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                break;
+            }
+
             case WAIT_STARTING:{
                 //waiting for drone stoped moving
                 switch(status_drone){
                     case MAPPING_ALGORITM_NEXT_STEP:
-                        ROS_INFO_STREAM("go to start");
-                        local_status = on_site ? (got_route ? START_HUMAN : WAIT_STARTING) : GOING_TO_START;
+                        ROS_WARN_STREAM("go to start");
+                        local_status = GOING_TO_START;
                         break;
                     
                     case TAKING_OFF:
@@ -198,12 +220,16 @@ void mapAlg::step(double sleepTime){
                 break;
             }
             case RTH_MSG:{
-                ROS_WARN_STREAM("i'm finished can i come home???");
-                sar_drone::send_mobile toMobile;
-                toMobile.cmdID = STOP_SEARCH;
-                toMobile.errorCode = MobileErrorCodes::I_AM_FINISHED_CAN_I_GO_HOME;
-                send_mobile_data_pub.publish(toMobile);
-                local_status = WAIT_RTH;
+                switch (status_drone){
+                case MAPPING_ALGORITM_NEXT_STEP:
+                    ROS_WARN_STREAM("i'm finished can i come home???");
+                    sar_drone::send_mobile toMobile;
+                    toMobile.cmdID = STOP_SEARCH;
+                    toMobile.errorCode = MobileErrorCodes::I_AM_FINISHED_CAN_I_GO_HOME;
+                    send_mobile_data_pub.publish(toMobile);
+                    local_status = WAIT_RTH;
+                    break;
+                }
             }
 
             case WAIT_RTH:{
@@ -224,9 +250,14 @@ void mapAlg::step(double sleepTime){
                 coord_msg.altitude = SEARCH_ALTITUDE;
 
                 return_msg.ID = msg_ID;
-                return_msg.Command = MA_MOVE_COORDINATES;
+                return_msg.Command = msgCommands::RTH;
                 return_msg.coordinate.push_back(coord_msg);
-                drone_commands_pub.publish(return_msg);
+                drone_PRIO_commands_pub.publish(return_msg);
+
+                sar_drone::send_mobile toMobile;
+                toMobile.cmdID = STOP_SEARCH;
+                toMobile.errorCode = MobileErrorCodes::I_AM_COMMING_HOME;
+                send_mobile_data_pub.publish(toMobile);
 
                 local_status = STOPPING;
 
@@ -436,13 +467,13 @@ void mapAlg::CreateRoute(const std::vector<sar_drone::coordinates> &area){
         }
         else{
             ROS_ERROR_STREAM("Failed to call route planner\n" << msg);
+            local_status = IDLE;
             return;
         }
     }
 
-    ROS_WARN_STREAM("route created:");
+    ROS_WARN_STREAM("route created");
     ROS_INFO_STREAM("created route:\n" << route);
-    local_status = IDLE;
     got_route = true;
 }
 

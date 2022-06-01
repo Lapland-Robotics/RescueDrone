@@ -1,4 +1,5 @@
 <launch>
+    <arg name="show_disp" default="False"/>
 	<node pkg="dji_sdk" type="dji_sdk_node" name="dji_sdk">
 		<!-- node parameters -->
 		<param name="acm_name" type="string" value="/dev/ttyACM0"/>
@@ -13,5 +14,8 @@
 	<node pkg="sar_drone" type="communication_with_drone" name="com_with_drone" respawn="true"/>
 	<node pkg="sar_drone" type="communication_with_MSDK" name="com_with_MSDK" respawn="true"/>
 	<node pkg="sar_drone" type="mapping_alg" name="mapping_alg" respawn="true"/>
-	<node pkg="sar_drone" type="human_detection.py" name="human_detections" respawn="true"/>
+	<node pkg="sar_drone" type="human_detection.py" name="human_detections" respawn="true">
+		<param name="show_display" value="$(arg show_disp)"/> 
+	</node>
+	<node pkg="sar_drone" type="routeplanner.py" name="route_planner" respawn="true"/>
 </launch>

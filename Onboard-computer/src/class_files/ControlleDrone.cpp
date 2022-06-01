@@ -87,12 +87,7 @@ void ControlleDrone::directionsCallback(const sar_drone::directions::ConstPtr& m
                     }
 
                     case MA_MOVE_COORDINATES:{
-                        sensor_msgs::NavSatFix tmp;
-                        tmp.longitude = msg->coordinate.front().longitude;
-                        tmp.latitude = msg->coordinate.front().latitude;
-                        tmp.altitude = msg->coordinate.front().altitude;
-                        StartMoveDrone(tmp, false);
-                        updateStatus(START_HUMAN_DETECTION);
+                        StartMoveDrone(msg->coordinate.front(), false);
                         break;
                     }
                     
@@ -174,7 +169,10 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
 
         case TAKE_OFF:{
             sar_drone::send_mobile toMobile;
+
             toMobile.cmdID = TAKE_OFF;
+            toMobile.errorCode = START_TAKEOFF;
+            send_mobile_data_pub.publish(toMobile);
 
             if(getFlightStatus() == DJISDK::M100FlightStatus::M100_STATUS_IN_AIR){
                 ROS_WARN_STREAM("drone alreay flying");
@@ -223,6 +221,13 @@ void ControlleDrone::directionsPRIOCallback(const sar_drone::directions::ConstPt
             }
 
             send_mobile_data_pub.publish(toMobile);
+            break;
+        }
+
+        case RTH:{
+            updateStatus(BACK_TO_BASE);
+            Status = MAPPING_ALGORITM_NEXT_STEP;
+            StartMoveDrone(msg->coordinate.front(), false);
             break;
         }
         
@@ -388,32 +393,45 @@ void ControlleDrone::step(double sleepTime){
                         lastPos.y = pos.y;
                         lastPos.z = pos.z;
                     }
+                    if(XYBigg){
+                        if(std::abs(cmd.x) < SPEED_MIDDLE * 1.5 || std::abs(pos.x) < SPEED_MIDDLE * 1.5){
+                            cmd.x = (std::abs(cmd.x) >= SPEED_SLOW) ? ((cmd.x > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.x;
+                        }
+                        else if(std::abs(cmd.x) < SPEED_FAST * 2 || std::abs(pos.x) < SPEED_FAST * 2){
+                            cmd.x = cmd.x > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
+                        }
+                        else if(std::abs(cmd.x) < DISTANCE_SLOWER || std::abs(pos.x) < DISTANCE_SLOWER){
+                            cmd.x = cmd.x > 0 ? SPEED_FAST : SPEED_FAST * -1;
+                        }
+                        else{
+                            cmd.x = cmd.x > 0 ? SPEED_MAX : SPEED_MAX * -1;
+                        }
 
-                    if(std::abs(cmd.x) < SPEED_MIDDLE * 1.5 || std::abs(pos.x) < SPEED_MIDDLE * 1.5){
-                        cmd.x = (std::abs(cmd.x) >= SPEED_SLOW) ? ((cmd.x > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.x;
-                    }
-                    else if(std::abs(cmd.x) < SPEED_FAST * 2 || std::abs(pos.x) < SPEED_FAST * 2){
-                        cmd.x = cmd.x > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
-                    }
-                    else if(std::abs(cmd.x) < DISTANCE_SLOWER || std::abs(pos.x) < DISTANCE_SLOWER){
-                        cmd.x = cmd.x > 0 ? SPEED_FAST : SPEED_FAST * -1;
+                        if(!((std::abs(cmd.x) < SPEED_SLOW) && (std::abs(cmd.y) < SPEED_SLOW))){
+                            cmd.y = cmd.y > 0 ? std::abs(cmd.x) * XYratio : std::abs(cmd.x) * XYratio * -1;
+                        }
                     }
                     else{
-                        cmd.x = cmd.x > 0 ? SPEED_MAX : SPEED_MAX * -1;
+                        if(std::abs(cmd.y) < SPEED_MIDDLE * 1.5 || std::abs(pos.y) < SPEED_MIDDLE * 1.5){
+                            cmd.y = (std::abs(cmd.y) >= SPEED_SLOW) ? ((cmd.y > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.y;
+                        }
+                        else if(std::abs(cmd.y) < SPEED_FAST * 2 || std::abs(pos.y) < SPEED_FAST * 2){
+                            cmd.y = cmd.y > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
+                        }
+                        else if(std::abs(cmd.y) < DISTANCE_SLOWER || std::abs(pos.y) < DISTANCE_SLOWER){
+                            cmd.y = cmd.y > 0 ? SPEED_FAST : SPEED_FAST * -1;
+                        }
+                        else{
+                            cmd.y = cmd.y > 0 ? SPEED_MAX : SPEED_MAX * -1;
+                        }  
+                        
+                        if(!((std::abs(cmd.x) < SPEED_SLOW) && (std::abs(cmd.y) < SPEED_SLOW))){
+                            cmd.x = cmd.x > 0 ? std::abs(cmd.y) * XYratio : std::abs(cmd.y) * XYratio * -1;
+                            
+                        }
                     }
                     
-                    if(std::abs(cmd.y) < SPEED_MIDDLE * 1.5 || std::abs(pos.y) < SPEED_MIDDLE * 1.5){
-                        cmd.y = (std::abs(cmd.y) >= SPEED_SLOW) ? ((cmd.y > 0) ? SPEED_SLOW : SPEED_SLOW * -1) : cmd.y;
-                    }
-                    else if(std::abs(cmd.y) < SPEED_FAST * 2 || std::abs(pos.y) < SPEED_FAST * 2){
-                        cmd.y = cmd.y > 0 ? SPEED_MIDDLE : SPEED_MIDDLE * -1;
-                    }
-                    else if(std::abs(cmd.y) < DISTANCE_SLOWER || std::abs(pos.y) < DISTANCE_SLOWER){
-                        cmd.y = cmd.y > 0 ? SPEED_FAST : SPEED_FAST * -1;
-                    }
-                    else{
-                        cmd.y = cmd.y > 0 ? SPEED_MAX : SPEED_MAX * -1;
-                    }
+                    
 
                     if(yes){
                         ROS_INFO_STREAM("x: " << cmd.x << "\ty: " << cmd.y << "\tz: " << cmd.z);
@@ -594,13 +612,16 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
             Target.y = y;
         }
         else{
-            rTarget = angleabs((headless ? (getRotation().z + M_PI / 2): getRotation().z + getDirectionAngle(x, y)));
+            rTarget = angleabs((headless ? (getRotation().z + M_PI / 2): (getRotation().z + M_PI / 2) + getDirectionAngle(x, y)));
 
             std::pair<float, float> tmp = remapDirections(x, y, getRotation().z);
 
             Target.x = tmp.first;
             Target.y = tmp.second;
         }
+
+        XYratio = std::abs(Target.x) > std::abs(Target.y) ? std::abs(Target.y/Target.x) : std::abs(Target.x/Target.y);
+        XYBigg = (std::abs(Target.x) > std::abs(Target.y));
 
         Target.z = relative_height ? (getGPS().altitude - home_altitude) + z : home_altitude + z;
         
@@ -628,6 +649,10 @@ void ControlleDrone::StartMoveDrone(float x, float y, float z, bool headless, bo
 }
 
 void ControlleDrone::StartMoveDrone(sensor_msgs::NavSatFix dest, bool headless){
+    geometry_msgs::Point tmp = translateGPS(getGPS(), dest);
+    StartMoveDrone(tmp.x, tmp.y, dest.altitude, headless, true, false);
+}
+void ControlleDrone::StartMoveDrone(sar_drone::coordinates dest, bool headless){
     geometry_msgs::Point tmp = translateGPS(getGPS(), dest);
     StartMoveDrone(tmp.x, tmp.y, dest.altitude, headless, true, false);
 }
@@ -715,18 +740,18 @@ float ControlleDrone::getDirectionAngle(float x, float y){
         return (x > 0) ? (M_PI / 2) : (-M_PI / 2); 
     }
     else{
-        float angle = std::abs(atan(y/x));
+        float angle = std::abs(atan(x/y));
         if(x > 0 && y > 0){
             return angle;
         }
         else if(x < 0 && y > 0){
-            return -M_PI / 2 + angle;
+            return -angle;
         }
         else if(x > 0 && y < 0){
-            return angle + M_PI / 2;
+            return M_PI - angle;
         }
         else if(x < 0 && y < 0){
-            return M_PI + angle;
+            return -M_PI + angle;
         }
         else{
             ROS_ERROR_STREAM("What dit just happen????");

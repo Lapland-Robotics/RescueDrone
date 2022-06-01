@@ -49,6 +49,7 @@ namespace SaR_Drone{
             OFF,
             IDLE,
             GOING_TO_START,
+            WAIT_GOIN_TO_START,
             START_HUMAN,
             START_HUMAN_SEND,
             MOVE_COMMAND_SEND,

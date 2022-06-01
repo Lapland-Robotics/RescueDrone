@@ -51,6 +51,8 @@ namespace SaR_Drone{
 
         void StartMoveDrone(float x, float y, float z, bool headless, bool relative_ground, bool relative_height = true);
         void StartMoveDrone(sensor_msgs::NavSatFix dest, bool headless);
+        void StartMoveDrone(sar_drone::coordinates dest, bool headless);
+        
         void StartRotate(float ofset, bool relative_current_rot); 
         void StopMoving();
 
@@ -68,6 +70,8 @@ namespace SaR_Drone{
         bool landing;
         bool gotCtrlAuthority;
         float home_altitude;
+        double XYratio;
+        bool XYBigg;
 
         ros::ServiceClient drone_task_service;
         ros::ServiceClient sdk_ctrl_authority_service;
